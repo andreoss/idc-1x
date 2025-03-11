@@ -13,7 +13,11 @@ jobs:
       - uses: cachix/install-nix-action@v27
         with:
           nix_path: nixpkgs=channel:nixos-24.05
+      - name: HLint
+        run: nix develop -c hlint src app test
       - name: Build
         run: nix build -L
       - name: Tests
-        run: nix develop -c cabal update && nix develop -c cabal test all
+        run: nix develop -c sh -c "cabal update && cabal test all"
+      - name: Weeder
+        run: nix develop -c sh -c "cabal build all && weeder --hie-dir dist-newstyle/hie"
