@@ -9,14 +9,14 @@ import Data.Aeson (Value, object, (.=))
 import qualified Data.ByteString.Lazy as BL
 import Data.Maybe (fromMaybe, listToMaybe)
 import Data.Proxy (Proxy(..))
+import Data.Swagger (Swagger)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
-import Database.Esqueleto.Legacy
+import Database.Esqueleto.Legacy hiding (Value)
 import Database.Persist.Sql
 import Servant
 import Servant.Swagger (toSwagger)
-import Data.Swagger (Swagger)
 
 import Idc.App (Env(..))
 import Idc.Models

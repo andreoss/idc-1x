@@ -19,26 +19,7 @@ data Catalog = Idc10 | Idc11
 data MapKind = Equal | Narrower | Broader | Related
   deriving (Eq, Ord, Show, Read, Enum, Bounded)
 
-mkPersist sqlSettings [persistLowerCase|
-CatalogItem
-    itemCatalog Text
-    itemCode Text
-    itemParent Text Maybe
-    itemTitle Text
-    itemChapter Text Maybe
-    itemLanguage Text
-    UniqueItem itemCatalog itemCode itemLanguage
-    deriving Show Eq
-
-Crosswalk
-    cwIcd10 Text
-    cwIcd11 Text
-    cwKind Text
-    UniquePair cwIcd10 cwIcd11
-    deriving Show Eq
-|]
-
-mkMigrate "migrateAll" [persistLowerCase|
+share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 CatalogItem
     itemCatalog Text
     itemCode Text
