@@ -36,12 +36,12 @@ toItems cat = map toItem
   where
     toItem (Row c p t e) =
       CatalogItem
-        { itemCatalog   = catalogTag cat
-        , itemCode      = c
-        , itemParent    = p
-        , itemTitle     = t
-        , itemChapter   = nonEmpty e
-        , itemLanguage  = "en"
+        { catalogItemCatalog   = catalogTag cat
+        , catalogItemCode      = c
+        , catalogItemParent    = p
+        , catalogItemTitle     = t
+        , catalogItemChapter   = nonEmpty e
+        , catalogItemLanguage  = "en"
         }
 
 nonEmpty :: Text -> Maybe Text

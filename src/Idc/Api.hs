@@ -5,6 +5,7 @@ module Idc.Api
   , swaggerDoc
   ) where
 
+import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (Value, object, (.=))
 import qualified Data.ByteString.Lazy as BL
 import Data.Maybe (fromMaybe, listToMaybe)
@@ -14,7 +15,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Database.Esqueleto.Legacy hiding (Value)
-import Database.Persist.Sql
+import Database.Persist.Sql (SqlBackend, runSqlPool, selectFirst)
 import Servant
 import Servant.Swagger (toSwagger)
 
@@ -64,16 +65,16 @@ catalogH env =
        listItems env
   :<|> getItem env
   :<|> searchItems env
-  :<|> crosswalk env
+  :<|> crosswalkH env
 
 resolveCatalog :: Text -> Handler Catalog
 resolveCatalog tag =
   maybe (failWith err404 "unknown catalog") pure (catalogFromTag tag)
 
-failWith :: ServantErr -> Text -> Handler a
+failWith :: ServerError -> Text -> Handler a
 failWith e t = throwError e { errBody = BL.fromStrict (encodeUtf8 t) }
 
-db :: Env -> ReaderT SqlBackend Handler a -> Handler a
+db :: Env -> ReaderT SqlBackend IO a -> IO a
 db env act = runSqlPool act (envPool env)
 
 listItems :: Env -> Text -> Maybe Int -> Maybe Int -> Maybe Text -> Handler Value
@@ -87,10 +88,10 @@ listItems env tag mpage mperPage mparent = do
         case mparent of
           Just p  -> where_ (i ^. CatalogItemParent ==. just (val p))
           Nothing -> pure ()
-  total <- db env $ do
+  total <- liftIO $ db env $ do
     cnt <- select $ from $ \i -> itemFilter i >> pure countRows
     pure (maybe 0 unValue (listToMaybe cnt))
-  rows <- db env $ select $
+  rows <- liftIO $ db env $ select $
     from $ \i -> do
       itemFilter i
       orderBy [asc (i ^. CatalogItemCode)]
@@ -112,7 +113,7 @@ clampP = max 1 . min 200
 getItem :: Env -> Text -> Text -> Handler Value
 getItem env tag code = do
   cat <- resolveCatalog tag
-  found <- db env $ selectFirst
+  found <- liftIO $ db env $ selectFirst
     [ CatalogItemCatalog ==. catalogTag cat
     , CatalogItemCode ==. code
     ] []
@@ -130,7 +131,7 @@ searchItems env tag mq mlimit = do
   let lim = max 1 (min 50 (fromMaybe 10 mlimit))
       pat = T.concat ["%", T.toLower q, "%"]
       qpat = T.concat [T.toLower q, "%"]
-  raw <- db env $ select $
+  raw <- liftIO $ db env $ select $
     from $ \i -> do
       where_ (i ^. CatalogItemCatalog ==. val (catalogTag cat)
               &&. (lower_ (i ^. CatalogItemTitle) `like` val pat
@@ -155,16 +156,16 @@ itemJson :: Entity CatalogItem -> Value
 itemJson e =
   let v = entityVal e
   in object
-       [ "code" .= itemCode v
-       , "parent" .= itemParent v
-       , "title" .= itemTitle v
-       , "chapter" .= itemChapter v
-       , "language" .= itemLanguage v
+       [ "code" .= catalogItemCode v
+       , "parent" .= catalogItemParent v
+       , "title" .= catalogItemTitle v
+       , "chapter" .= catalogItemChapter v
+       , "language" .= catalogItemLanguage v
        ]
 
-crosswalk :: Env -> Maybe Text -> Maybe Text -> Handler Value
-crosswalk env ma mb = do
-  rows <- db env $ select $
+crosswalkH :: Env -> Maybe Text -> Maybe Text -> Handler Value
+crosswalkH env ma mb = do
+  rows <- liftIO $ db env $ select $
     from $ \x -> do
       case (ma, mb) of
         (Just a, Just b) ->
@@ -183,7 +184,7 @@ xwJson :: Entity Crosswalk -> Value
 xwJson e =
   let v = entityVal e
   in object
-       [ "icd10" .= cwIcd10 v
-       , "icd11" .= cwIcd11 v
-       , "kind" .= cwKind v
+       [ "icd10" .= crosswalkIcd10 v
+       , "icd11" .= crosswalkIcd11 v
+       , "kind" .= crosswalkKind v
        ]
