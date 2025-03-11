@@ -18,7 +18,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Database.Esqueleto.Legacy hiding (Value, runSqlPool, count)
-import Database.Persist.Sql (Filter, count, runSqlPool, selectFirst)
+import Database.Persist.Sql (Filter, count, runSqlPool)
 import Servant
 import Servant.Swagger (toSwagger)
 
@@ -116,13 +116,15 @@ clampP = max 1 . min 200
 getItem :: Env -> Text -> Text -> Handler Value
 getItem env tag code = do
   cat <- resolveCatalog tag
-  found <- liftIO $ db env $ selectFirst
-    [ CatalogItemCatalog ==. catalogTag cat
-    , CatalogItemCode ==. code
-    ] []
-  case found of
-    Nothing -> failWith err404 "code not found"
-    Just e  -> pure (itemJson e)
+  results <- liftIO $ db env $ select $
+    from $ \i -> do
+      where_ (i ^. CatalogItemCatalog ==. val (catalogTag cat)
+              &&. i ^. CatalogItemCode ==. val code)
+      limit 1
+      pure i
+  case results of
+    []    -> failWith err404 "code not found"
+    (e:_) -> pure (itemJson e)
 
 searchItems :: Env -> Text -> Maybe Text -> Maybe Int -> Handler Value
 searchItems env tag mq mlimit = do
@@ -137,8 +139,8 @@ searchItems env tag mq mlimit = do
   raw <- liftIO $ db env $ select $
     from $ \i -> do
       where_ (i ^. CatalogItemCatalog ==. val (catalogTag cat)
-              &&. (lower_ (i ^. CatalogItemTitle) `like` val pat
-                   ||. i ^. CatalogItemCode `like` val qpat))
+              &&. ((lower_ (i ^. CatalogItemTitle) `like` val pat)
+                   ||. (i ^. CatalogItemCode `like` val qpat)))
       limit 500
       pure i
   let hits = rankHits q (map toHit raw)
