@@ -49,3 +49,21 @@ cabal run idc-catalog
 On first boot against an empty database the service loads `seed/idc10.csv`,
 `seed/idc11.csv` and `seed/crosswalk.csv`. Override the directory via
 `SEED_DIR`.
+
+Each entry carries an explicit `language` tag (BCP-47 lowercase); current
+seed data is tagged `en` and API payloads expose it as `language`.
+
+== Quality Gates
+
+Continuous integration runs on every push and pull request using nix.
+
+[cols="2,3"]
+|===
+|Gate |Tool
+|Static analysis |hlint
+|Unused declarations |weeder
+|Test suite |hspec
+|Build |nix build
+|===
+
+Rules reference docs/ADR-02.adoc.
