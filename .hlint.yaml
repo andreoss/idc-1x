@@ -1,0 +1,8 @@
+- fixities: []
+- arguments:
+    - -XHaskell2010
+- ignore: { name: "Avoid lambda" }
+- ignore: { name: "Use infix" }
+- ignore: { name: "Use fmap" }
+- ignore: { name: "Replace case with fromMaybe" }
+- ignore: { name: "Reduce duplication" }

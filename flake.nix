@@ -33,6 +33,8 @@
             buildInputs = [
               hp.ghc
               hp.cabal-install
+              hp.hlint
+              hp.weeder
               (hp.haskell-language-server.override { })
               pkgs.postgresql_16
               pkgs.redis
