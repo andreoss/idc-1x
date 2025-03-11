@@ -15,7 +15,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Database.Esqueleto.Legacy hiding (Value)
-import Database.Persist (SqlBackend, Filter, runSqlPool, selectFirst)
+import Database.Persist.Sql (SqlBackend, Filter, runSqlPool, selectFirst)
 import Servant
 import Servant.Swagger (toSwagger)
 
