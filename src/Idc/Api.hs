@@ -159,6 +159,7 @@ itemJson e =
        , "parent" .= itemParent v
        , "title" .= itemTitle v
        , "chapter" .= itemChapter v
+       , "language" .= itemLanguage v
        ]
 
 crosswalk :: Env -> Maybe Text -> Maybe Text -> Handler Value

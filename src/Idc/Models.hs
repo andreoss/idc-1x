@@ -28,7 +28,8 @@ CatalogItem
   itemParent Text Maybe
   itemTitle Text
   itemChapter Text Maybe
-  UniqueItem itemCatalog itemCode
+  itemLanguage Text
+  UniqueItem itemCatalog itemCode itemLanguage
   deriving Show Eq
 
 Crosswalk
