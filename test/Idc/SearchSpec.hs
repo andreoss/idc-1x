@@ -1,0 +1,38 @@
+module Idc.SearchSpec (spec) where
+
+import Data.Text (Text)
+import qualified Data.Text as T
+import Idc.Search
+import Test.Hspec
+
+hit :: Text -> Text -> Hit
+hit = Hit
+
+spec :: Spec
+spec = do
+  describe "scoreHit" $ do
+    it "rewards exact title matches highest" $
+      scoreHit "cholera" (hit "A00" "Cholera")
+        > scoreHit "cholera" (hit "A09" "Infectious gastroenteritis and colitis")
+        `shouldBe` True
+
+    it "boosts code prefix hits" $
+      scoreHit "E11" (hit "E11" "Type 2 diabetes mellitus")
+        > scoreHit "E11" (hit "Z99" "Unrelated entry")
+        `shouldBe` True
+
+  describe "rankHits" $ do
+    it "orders best first" $
+      rankHits "asthma"
+        [ hit "J06" "Acute upper respiratory infections"
+        , hit "J45" "Asthma"
+        , hit "J45.9" "Asthma unspecified"
+        ]
+        `shouldBe`
+          [ hit "J45" "Asthma"
+          , hit "J45.9" "Asthma unspecified"
+          , hit "J06" "Acute upper respiratory infections"
+          ]
+
+    it "is stable for equal scores" $
+      length (rankHits "zzz" [hit "A00" "x", hit "B01" "y"]) `shouldBe` 2
