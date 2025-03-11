@@ -6,6 +6,7 @@ module Idc.Api
   ) where
 
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Reader (ReaderT)
 import Data.Aeson (Value, object, (.=))
 import qualified Data.ByteString.Lazy as BL
 import Data.Maybe (fromMaybe, listToMaybe)
