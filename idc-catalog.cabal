@@ -1,0 +1,67 @@
+cabal-version:      2.4
+name:               idc-catalog
+version:            0.1.0.0
+synopsis:           REST services for IDC-10 and IDC-11 catalogs
+build-type:         Simple
+
+common shared
+  default-language: Haskell2010
+  ghc-options:      -Wall -Werror
+
+library
+  import:           shared
+  hs-source-dirs:   src
+  exposed-modules:
+    Idc.Api
+    Idc.App
+    Idc.Cache
+    Idc.Config
+    Idc.Import
+    Idc.Migrate
+    Idc.Models
+    Idc.Search
+  build-depends:
+    , aeson
+    , base
+    , bytestring
+    , containers
+    , esqueleto
+    , monad-logger
+    , persistent
+    , persistent-postgresql
+    , redis
+    , resource-pool
+    , resourcet
+    , servant
+    , servant-server
+    , servant-swagger
+    , swagger2
+    , text
+    , time
+    , warp
+
+executable idc-catalog
+  import:           shared
+  hs-source-dirs:   app
+  main-is:          Main.hs
+  build-depends:
+    , base
+    , idc-catalog
+    , text
+    , warp
+
+test-suite idc-catalog-test
+  import:           shared
+  type:             exitcode-stdio-1.0
+  hs-source-dirs:   test
+  main-is:          Spec.hs
+  other-modules:
+    Idc.ImportSpec
+    Idc.SearchSpec
+  build-depends:
+    , base
+    , containers
+    , hspec
+    , idc-catalog
+    , QuickCheck
+    , text

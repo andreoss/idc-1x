@@ -1,0 +1,7 @@
+dist-newstyle/
+.direnv/
+result
+result-*
+*.lock
+flake.lock
+.env
