@@ -83,7 +83,7 @@ listItems env tag mpage mperPage mparent = do
       perPage = clampP (fromMaybe 25 mperPage)
       offset' = (page - 1) * perPage
       itemFilter i = do
-        where_ (i ^. CatalogItemCatalog ==. val cat)
+        where_ (i ^. CatalogItemCatalog ==. val (catalogTag cat))
         case mparent of
           Just p  -> where_ (i ^. CatalogItemParent ==. just (val p))
           Nothing -> pure ()
@@ -113,7 +113,7 @@ getItem :: Env -> Text -> Text -> Handler Value
 getItem env tag code = do
   cat <- resolveCatalog tag
   found <- db env $ selectFirst
-    [ CatalogItemCatalog ==. cat
+    [ CatalogItemCatalog ==. catalogTag cat
     , CatalogItemCode ==. code
     ] []
   case found of
@@ -132,7 +132,7 @@ searchItems env tag mq mlimit = do
       qpat = T.concat [T.toLower q, "%"]
   raw <- db env $ select $
     from $ \i -> do
-      where_ (i ^. CatalogItemCatalog ==. val cat
+      where_ (i ^. CatalogItemCatalog ==. val (catalogTag cat)
               &&. (lower_ (i ^. CatalogItemTitle) `like` val pat
                    ||. i ^. CatalogItemCode `like` val qpat))
       limit 500
@@ -185,11 +185,5 @@ xwJson e =
   in object
        [ "icd10" .= cwIcd10 v
        , "icd11" .= cwIcd11 v
-       , "kind" .= showKind (cwKind v)
+       , "kind" .= cwKind v
        ]
-
-showKind :: MapKind -> Text
-showKind Equal    = "equal"
-showKind Narrower = "narrower"
-showKind Broader  = "broader"
-showKind Related  = "related"

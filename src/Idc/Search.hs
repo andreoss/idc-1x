@@ -4,7 +4,7 @@ module Idc.Search
   , rankHits
   ) where
 
-import Data.List (foldr')
+import Data.Foldable (foldr')
 import Data.Ord (comparing)
 import Data.Text (Text)
 import qualified Data.Text as T

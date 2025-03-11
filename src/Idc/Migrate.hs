@@ -36,7 +36,7 @@ toItems cat = map toItem
   where
     toItem (Row c p t e) =
       CatalogItem
-        { itemCatalog   = cat
+        { itemCatalog   = catalogTag cat
         , itemCode      = c
         , itemParent    = p
         , itemTitle     = t
@@ -50,11 +50,4 @@ nonEmpty e = if T.null e then Nothing else Just e
 toXw :: [(Text, Text, Text)] -> [Crosswalk]
 toXw = map toOne
   where
-    toOne (a, b, k) = Crosswalk a b (readKind k)
-
-readKind :: Text -> MapKind
-readKind k = case T.toLower k of
-  "equal"    -> Equal
-  "narrower" -> Narrower
-  "broader"  -> Broader
-  _          -> Related
+    toOne (a, b, k) = Crosswalk a b k

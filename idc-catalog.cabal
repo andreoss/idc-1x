@@ -6,6 +6,7 @@ build-type:         Simple
 
 common shared
   default-language: Haskell2010
+  default-extensions: OverloadedStrings
   ghc-options:      -Wall -Werror -hiedir dist-newstyle/hie
 
 library
@@ -29,7 +30,6 @@ library
     , monad-logger
     , persistent
     , persistent-postgresql
-    , redis
     , resource-pool
     , resourcet
     , servant
