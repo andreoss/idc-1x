@@ -11,7 +11,6 @@ module Idc.Models
   ) where
 
 import Data.Text (Text)
-import qualified Data.Text as T
 import Database.Persist.TH
 
 data Catalog = Idc10 | Idc11

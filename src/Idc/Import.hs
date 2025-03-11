@@ -8,6 +8,7 @@ module Idc.Import
   ) where
 
 import Data.Char (isDigit, isUpper)
+import Data.Maybe (mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 
@@ -20,10 +21,7 @@ data Row = Row
 
 parseCatalogCsv :: Text -> [Row]
 parseCatalogCsv =
-  mapMaybe' parseLine . drop 1 . T.lines
-
-mapMaybe' :: (a -> Maybe b) -> [a] -> [b]
-mapMaybe' f = foldr (\x acc -> maybe acc (: acc) (f x)) []
+  mapMaybe parseLine . drop 1 . T.lines
 
 parseLine :: Text -> Maybe Row
 parseLine l =
@@ -41,7 +39,7 @@ renderRow (Row c p t e) =
 
 parseCrosswalkCsv :: Text -> [(Text, Text, Text)]
 parseCrosswalkCsv =
-  mapMaybe' toTriple . drop 1 . T.lines
+  mapMaybe toTriple . drop 1 . T.lines
   where
     toTriple l = case T.splitOn "," (T.strip l) of
       [a, b, k] -> Just (a, b, k)
@@ -85,7 +83,7 @@ validIdc11Leaf t =
       let n = T.length s
       in n == 4
          && T.all (\c -> isUpper c || isDigit c) (T.take 2 s)
-         && any isUpper (T.unpack (T.take 2 s))
+         && T.any isUpper (T.take 2 s)
          && T.all isDigit (T.drop 2 s)
     extLen e = not (T.null e) && T.length e <= 2
 

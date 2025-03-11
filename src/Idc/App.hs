@@ -3,7 +3,7 @@ module Idc.App
   , mkEnv
   ) where
 
-import qualified Data.Text as T
+import Data.Text.Encoding (encodeUtf8)
 import Database.Persist.Postgresql (createPostgresqlPool)
 import Database.Persist.Sql (ConnectionPool)
 import Idc.Cache (Cache, mkCache)
@@ -17,6 +17,6 @@ data Env = Env
 
 mkEnv :: Config -> IO Env
 mkEnv cfg = do
-  pool <- createPostgresqlPool (T.unpack (cfgPgConn cfg)) 10
+  pool <- createPostgresqlPool (encodeUtf8 (cfgPgConn cfg)) 10
   cache <- mkCache
   pure (Env cfg pool cache)

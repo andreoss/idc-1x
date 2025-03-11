@@ -107,7 +107,7 @@ listItems env tag mpage mperPage mparent = do
     ]
 
 clampP :: Int -> Int
-clampP n = max 1 (min 200 n)
+clampP = max 1 . min 200
 
 getItem :: Env -> Text -> Text -> Handler Value
 getItem env tag code = do

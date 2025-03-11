@@ -1,7 +1,6 @@
 module Idc.SearchSpec (spec) where
 
 import Data.Text (Text)
-import qualified Data.Text as T
 import Idc.Search
 import Test.Hspec
 
