@@ -1,0 +1,22 @@
+= ADR-03: Internationalization Readiness
+
+== Status
+
+Accepted
+
+== Context
+
+IDC-11 publishes official titles in many languages and consumers will request localized content. Retrofitting storage after launch is costly.
+
+== Decision
+
+* UTF-8 end to end; JSON-only APIs.
+* Every catalog entry carries an explicit language tag (lowercase BCP-47); existing seed data is tagged `en`.
+* Titles are treated as locale-specific rows; evolving uniqueness toward `(catalog, code, language)` must stay possible without disruptive migrations.
+* Errors carry machine-readable codes alongside human messages so wording can be localized without breaking clients.
+* Search uses Unicode-aware casing; diacritic folding arrives with the search tuning epic.
+
+== Consequences
+
+* Additional locales load through the same import pipeline; no API shape change.
+* Error contracts stay stable while message wording evolves.

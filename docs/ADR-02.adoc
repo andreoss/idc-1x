@@ -1,0 +1,21 @@
+= ADR-02: Static Analysis with hlint and weeder
+
+== Status
+
+Accepted
+
+== Context
+
+Multiple short sprints deliver concurrently; style drift and dead declarations accumulate unnoticed without automated gates.
+
+== Decision
+
+* hlint runs over src, app, and test on every change; findings fail CI.
+* weeder fails CI on unused declarations; hie artifacts are produced by the standard build via `-hiedir`.
+* Strictness increases across sprints: the baseline `.hlint.yaml` ships with a short ignore list; each sprint block retires entries until none remain. Reintroducing an ignore requires an ADR amendment.
+* Lint tooling is pinned in the nix development shell so all roles run identical versions.
+
+== Consequences
+
+* Lint configuration lives next to the code and evolves through review.
+* Builds emit hie artifacts consumed by weeder in CI.
