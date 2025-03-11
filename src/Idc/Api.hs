@@ -16,7 +16,7 @@ import Database.Esqueleto.Legacy
 import Database.Persist.Sql
 import Servant
 import Servant.Swagger (toSwagger)
-import Swagger (Swagger)
+import Data.Swagger (Swagger)
 
 import Idc.App (Env(..))
 import Idc.Models
