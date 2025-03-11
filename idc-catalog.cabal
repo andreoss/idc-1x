@@ -19,6 +19,7 @@ common shared
     StandaloneDeriving
     TemplateHaskell
     TypeFamilies
+    TypeOperators
     UndecidableInstances
   ghc-options:      -Wall -Werror -hiedir dist-newstyle/hie
 

@@ -5,4 +5,7 @@
 - ignore: { name: "Use infix" }
 - ignore: { name: "Use fmap" }
 - ignore: { name: "Replace case with fromMaybe" }
+- ignore: { name: "Use fromMaybe" }
+- ignore: { name: "Eta reduce" }
+- ignore: { name: "Use guards" }
 - ignore: { name: "Reduce duplication" }
