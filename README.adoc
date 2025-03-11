@@ -1,0 +1,51 @@
+= idc-catalog
+
+REST services serving the IDC-10 and IDC-11 catalogs.
+
+== Stack
+
+* Haskell (servant, swagger, esqueleto)
+* PostgreSQL
+* Redis (optional; in-memory fallback when unset)
+* nix
+
+== Run
+
+[source,bash]
+----
+nix develop
+export PG_CONN="host=localhost dbname=idc user=idc password=idc"
+export REDIS_URL="127.0.0.1:6379"
+cabal run idc-catalog
+----
+
+== Endpoints (api/v1)
+
+[cols="2,4"]
+|===
+|Route |Purpose
+
+|GET /healthz
+|Liveness.
+
+|GET /swagger.json
+|Generated OpenAPI/Swagger document.
+
+|GET /api/v1/{idc10\|idc11}/items?page&perPage&parent
+|Paginated catalog listing.
+
+|GET /api/v1/{catalog}/items/{code}
+|Single catalog entry.
+
+|GET /api/v1/{catalog}/search?q&limit
+|Ranked search over code and title.
+
+|GET /api/v1/crosswalk?icd10&icd11
+|IDC-10 to IDC-11 mappings.
+|===
+
+== Seed data
+
+On first boot against an empty database the service loads `seed/idc10.csv`,
+`seed/idc11.csv` and `seed/crosswalk.csv`. Override the directory via
+`SEED_DIR`.
