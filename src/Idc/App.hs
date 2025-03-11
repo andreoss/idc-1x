@@ -8,8 +8,6 @@ import Database.Persist.Postgresql (createPostgresqlPool)
 import Database.Persist.Sql (ConnectionPool)
 import Idc.Cache (Cache, mkCache)
 import Idc.Config (Config(..))
-import Network.Wai (Application)
-import Servant (serve)
 
 data Env = Env
   { envCfg   :: Config

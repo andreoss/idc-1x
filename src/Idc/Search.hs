@@ -5,7 +5,6 @@ module Idc.Search
   ) where
 
 import Data.Foldable (foldr')
-import Data.Ord (comparing)
 import Data.Text (Text)
 import qualified Data.Text as T
 
@@ -38,6 +37,5 @@ sortDesc f = foldr' insert []
   where
     insert x [] = [x]
     insert x (y : ys)
-      | f y < f x || (f y == f x && cmpIdx x y == LT) = x : y : ys
+      | f y < f x = x : y : ys
       | otherwise = y : insert x ys
-    cmpIdx x y = comparing fst x y
