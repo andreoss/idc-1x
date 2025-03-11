@@ -20,7 +20,6 @@ import Data.Text.Encoding (encodeUtf8)
 import Database.Esqueleto.Legacy hiding (Value, runSqlPool, count)
 import Database.Persist.Sql (Filter, count, runSqlPool)
 import Servant
-import Servant.Swagger (toSwagger)
 
 import Idc.App (Env(..))
 import Idc.Models
@@ -52,7 +51,7 @@ idcApi :: Proxy IdcApi
 idcApi = Proxy
 
 swaggerDoc :: Swagger
-swaggerDoc = toSwagger idcApi
+swaggerDoc = mempty
 
 idcServer :: Env -> Server IdcApi
 idcServer env =
