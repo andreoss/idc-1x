@@ -14,8 +14,8 @@ import Data.Swagger (Swagger)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
-import Database.Esqueleto.Legacy hiding (Value)
-import Database.Persist.Sql (Filter, SqlPersistM, runSqlPool, selectFirst)
+import Database.Esqueleto.Legacy hiding (Value, runSqlPool)
+import Database.Persist.Sql (Filter, runSqlPool, selectFirst)
 import Servant
 import Servant.Swagger (toSwagger)
 
@@ -74,8 +74,8 @@ resolveCatalog tag =
 failWith :: ServerError -> Text -> Handler a
 failWith e t = throwError e { errBody = BL.fromStrict (encodeUtf8 t) }
 
-db :: Env -> SqlPersistM a -> IO a
-db env act = runSqlPool act (envPool env)
+db :: Env -> SqlPersistM (ResourceT IO) a -> IO a
+db env act = runResourceT $ runSqlPool act (envPool env)
 
 listItems :: Env -> Text -> Maybe Int -> Maybe Int -> Maybe Text -> Handler Value
 listItems env tag mpage mperPage mparent = do
@@ -84,9 +84,9 @@ listItems env tag mpage mperPage mparent = do
       perPage = clampP (fromMaybe 25 mperPage)
       offset' = (page - 1) * perPage
       itemFilter i = do
-        where_ (i ^. CatalogItemCatalog ==. val (catalogTag cat))
+        where_ (i ^. catalogItemCatalog ==. val (catalogTag cat))
         case mparent of
-          Just p  -> where_ (i ^. CatalogItemParent ==. just (val p))
+          Just p  -> where_ (i ^. catalogItemParent ==. just (val p))
           Nothing -> pure ()
   total <- liftIO $ db env $ do
     cnt <- select $ from $ \i -> itemFilter i >> pure countRows
@@ -94,7 +94,7 @@ listItems env tag mpage mperPage mparent = do
   rows <- liftIO $ db env $ select $
     from $ \i -> do
       itemFilter i
-      orderBy [asc (i ^. CatalogItemCode)]
+      orderBy [asc (i ^. catalogItemCode)]
       limit (fromIntegral perPage)
       offset (fromIntegral offset')
       pure i
@@ -114,8 +114,8 @@ getItem :: Env -> Text -> Text -> Handler Value
 getItem env tag code = do
   cat <- resolveCatalog tag
   found <- liftIO $ db env $ selectFirst
-    [ CatalogItemCatalog ==. catalogTag cat
-    , CatalogItemCode ==. code
+    [ catalogItemCatalog ==. catalogTag cat
+    , catalogItemCode ==. code
     ] []
   case found of
     Nothing -> failWith err404 "code not found"
@@ -133,9 +133,9 @@ searchItems env tag mq mlimit = do
       qpat = T.concat [T.toLower q, "%"]
   raw <- liftIO $ db env $ select $
     from $ \i -> do
-      where_ (i ^. CatalogItemCatalog ==. val (catalogTag cat)
-              &&. (lower_ (i ^. CatalogItemTitle) `like` val pat
-                   ||. i ^. CatalogItemCode `like` val qpat))
+      where_ (i ^. catalogItemCatalog ==. val (catalogTag cat)
+              &&. (lower_ (i ^. catalogItemTitle) `like` val pat
+                   ||. i ^. catalogItemCode `like` val qpat))
       limit 500
       pure i
   let hits = rankHits q (map toHit raw)
@@ -169,11 +169,11 @@ crosswalkH env ma mb = do
     from $ \x -> do
       case (ma, mb) of
         (Just a, Just b) ->
-          where_ (x ^. CrosswalkIcd10 ==. val a &&. x ^. CrosswalkIcd11 ==. val b)
+          where_ (x ^. crosswalkIcd10 ==. val a &&. x ^. crosswalkIcd11 ==. val b)
         (Just a, Nothing) ->
-          where_ (x ^. CrosswalkIcd10 ==. val a)
+          where_ (x ^. crosswalkIcd10 ==. val a)
         (Nothing, Just b) ->
-          where_ (x ^. CrosswalkIcd11 ==. val b)
+          where_ (x ^. crosswalkIcd11 ==. val b)
         (Nothing, Nothing) ->
           pure ()
       limit 1000
