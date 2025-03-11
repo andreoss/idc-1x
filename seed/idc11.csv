@@ -55,3 +55,10 @@ FA00-FAZZ,15,Joint or spine disorders,15
 ME84.2,,Low back pain,21
 GC08,,Urinary tract infection site not specified,16
 ME84,FA00-FAZZ,Dorsalgia,21
+3A00-3A9Z,,Anaemias or other erythrocyte disorders,03
+3A00,3A00-3A9Z,Iron deficiency anaemia,03
+3A01,3A00-3A9Z,Anaemia due to blood loss chronic,03
+3A40-3A4Z,,Coagulation defects haemorrhagic,03
+4A00-4AZZ,,Immune deficiency disorders,04
+4A01,4A00-4AZZ,Common variable immunodeficiency,04
+5A80-5A8Z,,Obesity or overweight disorders,05
