@@ -1,0 +1,107 @@
+I,,,Certain infectious and parasitic diseases
+II,,,Neoplasms
+IV,,,Endocrine nutritional and metabolic diseases
+V,,,Mental and behavioural disorders
+VI,,,Diseases of the nervous system
+VIII,,,Diseases of the ear and mastoid process
+IX,,,Diseases of the circulatory system
+X,,,Diseases of the respiratory system
+XI,,,Diseases of the digestive system
+XII,,,Diseases of the skin and subcutaneous tissue
+XIII,,,Diseases of the musculoskeletal system
+XIV,,,Diseases of the genitourinary system
+A00-A09,I,Intestinal infectious diseases,01
+A00,A00-A09,Cholera,01
+A00.0,A00,Cholera due to Vibrio cholerae 01 biovar cholerae,01
+A00.1,A00,Cholera due to Vibrio cholerae 01 biovar el tor,01
+A00.9,A00,Unspecified cholera,01
+A01,A00-A09,Typhoid and paratyphoid fevers,01
+A01.0,A01,Typhoid fever,01
+A01.1,A01,Paratyphoid fever A,01
+A01.2,A01,Paratyphoid fever B,01
+A02,A00-A09,Other salmonella infections,01
+A02.1,A02,Salmonella sepsis,01
+A03,A00-A09,Shigellosis,01
+A04,A00-A09,Other bacterial intestinal infections,01
+A05,A00-A09,Other bacterial foodborne intoxications,01
+A06,A00-A09,Amoebiasis,01
+A07,A00-A09,Other protozoal intestinal diseases,01
+A08,A00-A09,Viral and other specified intestinal infections,01
+A09,A00-A09,Infectious gastroenteritis and colitis,01
+B15-B19,I,Viral hepatitis,01
+B15,B15-B19,Acute hepatitis A,01
+B16,B15-B19,Acute hepatitis B,01
+B17,B15-B19,Other acute viral hepatitis,01
+B18,B15-B19,Chronic viral hepatitis,01
+B19,B15-B19,Unspecified viral hepatitis,01
+C00-C14,II,Malignant neoplasms of lip oral cavity and pharynx,02
+C00,C00-C14,Malignant neoplasm of lip,02
+C01,C00-C14,Malignant neoplasm of base of tongue,02
+C02,C00-C14,Malignant neoplasm of other parts of tongue,02
+C03,C00-C14,Malignant neoplasm of gum,02
+C04,C00-C14,Malignant neoplasm of floor of mouth,02
+C05,C00-C14,Malignant neoplasm of palate,02
+C06,C00-C14,Malignant neoplasm of other and unspecified parts of mouth,02
+C07,C00-C14,Malignant neoplasm of parotid gland,02
+C08,C00-C14,Malignant neoplasm of other major salivary glands,02
+C09,C00-C14,Malignant neoplasm of tonsil,02
+C10,C00-C14,Malignant neoplasm of oropharynx,02
+C11,C00-C14,Malignant neoplasm of nasopharynx,02
+C12,C00-C14,Malignant neoplasm of piriform sinus,02
+C13,C00-C14,Malignant neoplasm of hypopharynx,02
+C14,C00-C14,Malignant neoplasm of other ill-defined oral sites,02
+E10-E14,IV,Diabetes mellitus,04
+E10,E10-E14,Type 1 diabetes mellitus,04
+E10.9,E10,Type 1 diabetes mellitus without complications,04
+E11,E10-E14,Type 2 diabetes mellitus,04
+E11.9,E11,Type 2 diabetes mellitus without complications,04
+E12,E10-E14,Malnutrition-related diabetes mellitus,04
+E13,E10-E14,Other specified diabetes mellitus,04
+E14,E10-E14,Unspecified diabetes mellitus,04
+F32,V,Depressive episode,05
+F32.0,F32,Mild depressive episode,05
+F32.1,F32,Moderate depressive episode,05
+F32.2,F32,Severe depressive episode without psychotic symptoms,05
+F32.3,F32,Severe depressive episode with psychotic symptoms,05
+F32.9,F32,Depressive episode unspecified,05
+G40,VI,Epilepsy,06
+G40.0,G40,Idiopathic epilepsy with localized onset seizures,06
+G40.1,G40,Symptomatic epilepsy with simple partial seizures,06
+G40.2,G40,Symptomatic epilepsy with complex partial seizures,06
+G40.9,G40,Epilepsy unspecified,06
+H66,VIII,Suppurative and unspecified otitis media,10
+H66.0,H66,Acute suppurative otitis media,10
+H66.1,H66,Chronic tubotympanic suppurative otitis media,10
+H66.4,H66,Suppurative otitis media unspecified,10
+I10-I15,IX,Hypertensive diseases,11
+I10,I10-I15,Essential hypertension,11
+I11,I10-I15,Hypertensive heart disease,11
+I12,I10-I15,Hypertensive renal disease,11
+I13,I10-I15,Hypertensive heart and renal disease,11
+I15,I10-I15,Secondary hypertension,11
+J00-J06,X,Acute upper respiratory infections,12
+J00,J00-J06,Acute nasopharyngitis,12
+J01,J00-J06,Acute sinusitis,12
+J02,J00-J06,Acute pharyngitis,12
+J03,J00-J06,Acute tonsillitis,12
+J04,J00-J06,Acute laryngitis and tracheitis,12
+J06,J00-J06,Acute upper respiratory infections of multiple sites,12
+J45,X,Asthma,12
+J45.0,J45,Asthma with predominant allergic component,12
+J45.1,J45,Nonallergic asthma,12
+J45.8,J45,Mixed asthma,12
+J45.9,J45,Asthma unspecified,12
+K35,XI,Acute appendicitis,13
+K35.2,K35,Acute appendicitis with generalized peritonitis,13
+K35.3,K35,Acute appendicitis with localized peritonitis,13
+K35.8,K35,Acute appendicitis unspecified,13
+L03,XII,Cellulitis,14
+L03.0,L03,Cellulitis of finger,14
+L03.1,L03,Cellulitis of toe,14
+L03.9,L03,Cellulitis unspecified,14
+M54,XIII,Dorsalgia,15
+M54.5,M54,Low back pain,15
+N39,XIV,Other disorders of urinary system,16
+N39.0,N39,Urinary tract infection site not specified,16
+N39.3,N39,Stress incontinence,16
+N39.4,N39,Other specified urinary incontinence,16

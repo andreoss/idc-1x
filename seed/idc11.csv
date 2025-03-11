@@ -1,0 +1,57 @@
+01,,,Certain infectious or parasitic diseases
+02,,,Neoplasms
+03,,,Diseases of the blood or blood-forming organs
+04,,,Diseases of the immune system
+05,,,Endocrine nutritional or metabolic diseases
+06,,,Mental behavioural or neurodevelopmental disorders
+07,,,Sleep-wake disorders
+08,,,Diseases of the nervous system
+09,,,Diseases of the visual system
+11,,,Diseases of the circulatory system
+12,,,Diseases of the respiratory system
+13,,,Diseases of the digestive system
+14,,,Diseases of the skin
+15,,,Diseases of the musculoskeletal system or connective tissue
+16,,,Diseases of the genitourinary system
+19,,,Certain conditions originating in the perinatal period
+20,,,Developmental anomalies or birth defects
+21,,,Symptoms signs or clinical findings not elsewhere classified
+22,,,Injury poisoning or certain other consequences of external causes
+24,,,Factors influencing health status
+25,,,Codes for special purposes
+1A00-1A9Z,01,Intestinal infectious diseases,01
+1A00,1A00-1A9Z,Cholera,01
+1A01,1A00-1A9Z,Typhoid fever,01
+1B10-1B1Z,01,Mycobacterial disease,01
+1B10,1B10-1B1Z,Tuberculosis,01
+2B60-2B6Z,02,Malignant neoplasms of lip or oral cavity,02
+2B60,2B60-2B6Z,Malignant neoplasm of lip,02
+5A00-5AZZ,05,Endocrine or metabolic disorders,05
+5A10,5A00-5AZZ,Type 1 diabetes mellitus,05
+5A10.0,5A10,Type 1 diabetes mellitus without complications,05
+5A11,5A00-5AZZ,Type 2 diabetes mellitus,05
+5A11.0,5A11,Type 2 diabetes mellitus without complications,05
+6A70-6A7Z,06,Depressive disorders,06
+6A70,6A70-6A7Z,Single episode depressive disorder,06
+8A60-8A6Z,08,Neurological conditions,08
+8A61,8A60-8A6Z,Idiopathic epilepsy,08
+8A62,8A60-8A6Z,Generalized epilepsy,08
+BA00-BAZZ,11,Hypertensive disorders,11
+BA00,BA00-BAZZ,Essential hypertension,11
+BA01,BA00-BAZZ,Secondary hypertension,11
+CA00-CA0Z,12,Upper airway infections,12
+CA00,CA00-CA0Z,Acute nasopharyngitis,12
+CA01,CA00-CA0Z,Acute sinusitis,12
+CA02,CA00-CA0Z,Acute pharyngitis,12
+CA20-CA2Z,12,Lower airway disease,12
+CA23,CA20-CA2Z,Asthma,12
+CA40-CA4Z,12,Pneumonia,12
+CA40,CA40-CA4Z,Bacterial pneumonia,12
+DA00-DA0Z,13,Oral or oesophageal disease,13
+DD70-DD7Z,13,Appendiceal disease,13
+MD82,DD70-DD7Z,Acute appendicitis,21
+EA80-EAZZ,14,Skin infections,14
+FA00-FAZZ,15,Joint or spine disorders,15
+ME84.2,,Low back pain,21
+GC08,,Urinary tract infection site not specified,16
+ME84,FA00-FAZZ,Dorsalgia,21
