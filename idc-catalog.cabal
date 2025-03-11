@@ -9,9 +9,11 @@ common shared
   default-extensions:
     DataKinds
     DerivingStrategies
+    FlexibleContexts
     FlexibleInstances
     GADTs
     GeneralizedNewtypeDeriving
+    MultiParamTypeClasses
     OverloadedStrings
     QuasiQuotes
     StandaloneDeriving
