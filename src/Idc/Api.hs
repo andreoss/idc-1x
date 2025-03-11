@@ -17,8 +17,8 @@ import Data.Swagger (Swagger)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
-import Database.Esqueleto.Legacy hiding (Value, runSqlPool)
-import Database.Persist.Sql (Filter, runSqlPool, selectFirst)
+import Database.Esqueleto.Legacy hiding (Value, runSqlPool, count)
+import Database.Persist.Sql (Filter, count, runSqlPool, selectFirst)
 import Servant
 import Servant.Swagger (toSwagger)
 
