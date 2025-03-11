@@ -8,6 +8,7 @@ module Idc.Api
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Trans.Resource (runResourceT)
+import Control.Monad.Trans.Reader (mapReaderT)
 import Data.Aeson (Value, object, (.=))
 import qualified Data.ByteString.Lazy as BL
 import Data.Maybe (fromMaybe, listToMaybe)
@@ -77,7 +78,7 @@ failWith :: ServerError -> Text -> Handler a
 failWith e t = throwError e { errBody = BL.fromStrict (encodeUtf8 t) }
 
 db :: Env -> SqlPersistM a -> IO a
-db env act = runResourceT $ runNoLoggingT $ runSqlPool act (envPool env)
+db env act = runSqlPool (mapReaderT (runResourceT . runNoLoggingT) act) (envPool env)
 
 listItems :: Env -> Text -> Maybe Int -> Maybe Int -> Maybe Text -> Handler Value
 listItems env tag mpage mperPage mparent = do
