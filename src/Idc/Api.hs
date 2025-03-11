@@ -74,8 +74,8 @@ resolveCatalog tag =
 failWith :: ServerError -> Text -> Handler a
 failWith e t = throwError e { errBody = BL.fromStrict (encodeUtf8 t) }
 
-db :: Env -> SqlPersistM (ResourceT IO) a -> IO a
-db env act = runResourceT $ runSqlPool act (envPool env)
+db :: Env -> SqlPersistM a -> IO a
+db env act = runSqlPool act (envPool env)
 
 listItems :: Env -> Text -> Maybe Int -> Maybe Int -> Maybe Text -> Handler Value
 listItems env tag mpage mperPage mparent = do
