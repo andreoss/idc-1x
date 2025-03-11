@@ -4,7 +4,6 @@ module Idc.Migrate
   ) where
 
 import Control.Monad (unless)
-import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Database.Persist.Sql
@@ -13,18 +12,16 @@ import Idc.Import
 import Idc.Models
 import System.FilePath ((</>))
 
-type Pool = ConnectionPool
-
-runSchemaMigrations :: Pool -> IO ()
+runSchemaMigrations :: ConnectionPool -> IO ()
 runSchemaMigrations pool =
   runSqlPool (runMigration migrateAll) pool
 
-ensureSeeded :: Config -> Pool -> IO ()
+ensureSeeded :: Config -> ConnectionPool -> IO ()
 ensureSeeded cfg pool = do
   n <- runSqlPool (count ([] :: [Filter CatalogItem])) pool
   unless (n > 0) $ seedAll (cfgSeedDir cfg) pool
 
-seedAll :: FilePath -> Pool -> IO ()
+seedAll :: FilePath -> ConnectionPool -> IO ()
 seedAll dir pool = do
   c10 <- parseCatalogCsv <$> TIO.readFile (dir </> "idc10.csv")
   c11 <- parseCatalogCsv <$> TIO.readFile (dir </> "idc11.csv")
@@ -36,18 +33,18 @@ toItems cat = map toItem
   where
     toItem (Row c p t e) =
       CatalogItem
-        { catalogItemCatalog   = catalogTag cat
-        , catalogItemCode      = c
-        , catalogItemParent    = p
-        , catalogItemTitle     = t
-        , catalogItemChapter   = nonEmpty e
-        , catalogItemLanguage  = "en"
+        { catalogItemCatalog  = catalogTag cat
+        , catalogItemCode     = c
+        , catalogItemParent   = p
+        , catalogItemTitle    = t
+        , catalogItemChapter  = nonEmpty e
+        , catalogItemLanguage = "en"
         }
 
-nonEmpty :: Text -> Maybe Text
+nonEmpty :: T.Text -> Maybe T.Text
 nonEmpty e = if T.null e then Nothing else Just e
 
-toXw :: [(Text, Text, Text)] -> [Crosswalk]
+toXw :: [(T.Text, T.Text, T.Text)] -> [Crosswalk]
 toXw = map toOne
   where
     toOne (a, b, k) = Crosswalk a b k

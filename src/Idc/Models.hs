@@ -21,20 +21,20 @@ data MapKind = Equal | Narrower | Broader | Related
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 CatalogItem
-    itemCatalog Text
-    itemCode Text
-    itemParent Text Maybe
-    itemTitle Text
-    itemChapter Text Maybe
-    itemLanguage Text
-    UniqueItem itemCatalog itemCode itemLanguage
+    catalog Text
+    code Text
+    parent Text Maybe
+    title Text
+    chapter Text Maybe
+    language Text
+    UniqueItem catalog code language
     deriving Show Eq
 
 Crosswalk
-    cwIcd10 Text
-    cwIcd11 Text
-    cwKind Text
-    UniquePair cwIcd10 cwIcd11
+    icd10 Text
+    icd11 Text
+    kind Text
+    UniquePair icd10 icd11
     deriving Show Eq
 |]
 
