@@ -53,6 +53,7 @@ library
     , swagger2
     , text
     , time
+    , transformers
     , warp
 
 executable idc-catalog

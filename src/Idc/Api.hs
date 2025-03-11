@@ -6,7 +6,6 @@ module Idc.Api
   ) where
 
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Reader (ReaderT)
 import Data.Aeson (Value, object, (.=))
 import qualified Data.ByteString.Lazy as BL
 import Data.Maybe (fromMaybe, listToMaybe)
@@ -16,7 +15,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Database.Esqueleto.Legacy hiding (Value)
-import Database.Persist.Sql (SqlBackend, Filter, runSqlPool, selectFirst)
+import Database.Persist.Sql (Filter, SqlPersistM, runSqlPool, selectFirst)
 import Servant
 import Servant.Swagger (toSwagger)
 
@@ -75,7 +74,7 @@ resolveCatalog tag =
 failWith :: ServerError -> Text -> Handler a
 failWith e t = throwError e { errBody = BL.fromStrict (encodeUtf8 t) }
 
-db :: Env -> ReaderT SqlBackend IO a -> IO a
+db :: Env -> SqlPersistM a -> IO a
 db env act = runSqlPool act (envPool env)
 
 listItems :: Env -> Text -> Maybe Int -> Maybe Int -> Maybe Text -> Handler Value
