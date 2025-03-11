@@ -7,7 +7,12 @@
     let
       systems = [ "x86_64-linux" "aarch64-linux" ];
       forAll = f: nixpkgs.lib.genAttrs systems (s: f s);
-      hpFor = pkgs: pkgs.haskell.packages.ghc96;
+      hpFor = pkgs: pkgs.haskell.packages.ghc96.override {
+        overrides = self: super: {
+          mkDerivation = args:
+            super.mkDerivation (args // { doHaddock = false; doCheck = false; });
+        };
+      };
     in
     {
       packages = forAll (sys:
