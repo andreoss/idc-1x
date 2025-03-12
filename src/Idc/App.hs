@@ -19,5 +19,4 @@ data Env = Env
 mkEnv :: Config -> IO Env
 mkEnv cfg = do
   pool <- runStdoutLoggingT $ createPostgresqlPool (encodeUtf8 (cfgPgConn cfg)) 10
-  cache <- mkCache
-  pure (Env cfg pool cache)
+  Env cfg pool <$> mkCache
