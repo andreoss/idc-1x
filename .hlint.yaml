@@ -1,4 +1,3 @@
-- fixities: []
 - arguments:
     - -XHaskell2010
 - ignore: { name: "Avoid lambda" }
