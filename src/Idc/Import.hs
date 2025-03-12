@@ -1,6 +1,7 @@
 module Idc.Import
   ( Row(..)
   , parseCatalogCsv
+  , parseLine
   , parseCrosswalkCsv
   , renderRow
   , validIdc10Code
