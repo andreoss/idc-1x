@@ -12,7 +12,6 @@ import Control.Monad.Trans.Reader (mapReaderT)
 import Data.Aeson (Value, object, (.=))
 import qualified Data.ByteString.Lazy as BL
 import Data.Maybe (fromMaybe, listToMaybe)
-import Data.Proxy (Proxy(..))
 import Data.Swagger (Swagger)
 import Data.Text (Text)
 import qualified Data.Text as T
