@@ -63,7 +63,9 @@ executable idc-catalog
   build-depends:
     , base
     , idc-catalog
+    , servant-server
     , text
+    , wai
     , warp
 
 test-suite idc-catalog-test
