@@ -10,7 +10,7 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Trans.Resource (runResourceT)
 import Control.Monad.Trans.Reader (mapReaderT)
-import Data.Aeson (FromJSON(..), ToJSON(..), Value, object, withObject, (.:), (.:?), (.=))
+import Data.Aeson (Value, object, (.=))
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy as BL
 import Data.Maybe (fromMaybe, listToMaybe)
@@ -43,7 +43,7 @@ data PagedResponse = PagedResponse
   , prItems    :: [Value]
   } deriving (Show)
 
-instance ToJSON PagedResponse where
+instance Aeson.ToJSON PagedResponse where
   toJSON p = object
     [ "catalog"  .= prCatalog p
     , "page"     .= prPage p
@@ -58,28 +58,29 @@ instance ToJSON PagedResponse where
     , "items"    .= prItems p
     ]
 
-instance FromJSON PagedResponse where
-  parseJSON = withObject "PagedResponse" $ \o -> PagedResponse
-    <$> o .:  "catalog"
-    <*> o .:  "page"
-    <*> o .:  "perPage"
-    <*> o .:  "total"
-    <*> o .:? "parent"
-    <*> o .:? "chapter"
-    <*> o .:? "next"
-    <*> o .:? "prev"
-    <*> o .:  "first"
-    <*> o .:  "last"
-    <*> o .:  "items"
+instance Aeson.FromJSON PagedResponse where
+  parseJSON = Aeson.withObject "PagedResponse" $ \o ->
+    PagedResponse
+    <$> o Aeson..:  "catalog"
+    <*> o Aeson..:  "page"
+    <*> o Aeson..:  "perPage"
+    <*> o Aeson..:  "total"
+    <*> o Aeson..:? "parent"
+    <*> o Aeson..:? "chapter"
+    <*> o Aeson..:? "next"
+    <*> o Aeson..:? "prev"
+    <*> o Aeson..:  "first"
+    <*> o Aeson..:  "last"
+    <*> o Aeson..:  "items"
 
 newtype ImportRequest = ImportRequest
   { seedDir :: FilePath
   } deriving (Eq, Show)
 
-instance ToJSON ImportRequest where
+instance Aeson.ToJSON ImportRequest where
   toJSON (ImportRequest d) = Aeson.object ["seedDir" Aeson..= d]
 
-instance FromJSON ImportRequest where
+instance Aeson.FromJSON ImportRequest where
   parseJSON = Aeson.withObject "ImportRequest" $ \o ->
     ImportRequest <$> o Aeson..: "seedDir"
 
@@ -196,7 +197,7 @@ listItems env tag mpage mperPage mparent mchapter = do
         , prLast     = totalPages
         , prItems    = map itemJson rows
         }
-  pure (toJSON resp)
+  pure (Aeson.toJSON resp)
 
 clampP :: Int -> Int
 clampP = max 1 . min 200
