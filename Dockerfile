@@ -1,4 +1,4 @@
-FROM library/haskell:9.6 AS builder
+FROM library/haskell:9.6
 
 RUN apt-get update && \
     apt-get install -y curl ca-certificates gnupg lsb-release && \
@@ -8,13 +8,8 @@ RUN apt-get update && \
     apt-get install -y libpq-dev postgresql-server-dev-16 && \
     rm -rf /var/lib/apt/lists/*
 
-RUN cabal update && cabal install hlint
-
 WORKDIR /app
 COPY idc-catalog.cabal .
-RUN cabal build --only-dependencies 2>&1
+RUN cabal update && cabal build --only-dependencies 2>&1
 COPY . .
 RUN cabal build all && cabal test all
-
-FROM builder AS dev
-RUN cp ~/.local/bin/hlint /usr/local/bin/hlint 2>/dev/null || true
