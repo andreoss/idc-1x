@@ -25,7 +25,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Database.Esqueleto.Legacy hiding (Value, runSqlPool, count)
-import Database.Persist.Sql (Filter, count, runSqlPool)
+import Database.Persist.Sql (runSqlPool)
 import Servant hiding (Param)
 import System.FilePath ((</>))
 

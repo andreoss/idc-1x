@@ -5,3 +5,4 @@ result-*
 *.lock
 flake.lock
 .env
+seed/
