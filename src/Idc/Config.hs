@@ -29,7 +29,7 @@ loadConfig =
     <*> (maybe 8080 read <$> lookupEnv "PORT")
     <*> (maybe "seed" id <$> lookupEnv "SEED_DIR")
     <*> (maybe 10 read <$> lookupEnv "POOL_SIZE")
-    <*> (T.pack <$> maybe "info" id <$> lookupEnv "LOG_LEVEL")
+    <*> (T.pack . maybe "info" id <$> lookupEnv "LOG_LEVEL")
     <*> (featureFlagsFromEnv <$> lookupEnv "ENABLE_CACHE" <*> lookupEnv "ENABLE_METRICS")
 
 featureFlagsFromEnv :: Maybe String -> Maybe String -> FeatureFlags

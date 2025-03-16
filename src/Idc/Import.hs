@@ -13,6 +13,7 @@ module Idc.Import
 import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.Aeson as Aeson
 import Data.Char (isDigit, isUpper)
+import Data.Either (lefts, rights)
 import Data.Text (Text)
 import qualified Data.Text as T
 
@@ -63,8 +64,8 @@ parseCatalogCsv txt =
   let ls = drop 1 (T.lines txt)
       numbered = zip [2 :: Int ..] ls
       results = map (uncurry parseCatalogLine) numbered
-      errs = [e | Left e <- results]
-      rows = [r | Right r <- results]
+      errs = lefts results
+      rows = rights results
   in ImportResult errs rows
 
 parseCatalogLine :: Int -> Text -> Either ImportError Row
