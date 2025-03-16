@@ -32,6 +32,7 @@ library
     Idc.App
     Idc.Cache
     Idc.Config
+    Idc.Cors
     Idc.Import
     Idc.Log
     Idc.Migrate
@@ -39,6 +40,7 @@ library
     Idc.Models
     Idc.RateLimit
     Idc.Search
+    Idc.Security
   build-depends:
     , aeson
     , base
@@ -46,6 +48,7 @@ library
     , containers
     , esqueleto
     , filepath
+    , http-types
     , insert-ordered-containers
     , monad-logger
     , persistent
@@ -59,6 +62,7 @@ library
     , text
     , time
     , transformers
+    , wai
     , warp
 
 executable idc-catalog

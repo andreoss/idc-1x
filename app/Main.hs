@@ -7,7 +7,9 @@ import Data.Word (Word64)
 import Idc.App (Env(..), mkEnv, envPool)
 import Idc.Api (idcApi, idcServer)
 import Idc.Config (cfgPort, loadConfig, validateConfig)
+import Idc.Cors (corsMiddleware)
 import Idc.Migrate (ensureSeeded, runSchemaMigrations)
+import Idc.Security (securityHeadersMiddleware)
 import Network.Wai (Application, Middleware, requestHeaders)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.Gzip (gzip, defaultGzipSettings)
@@ -26,7 +28,7 @@ generateRequestId = do
   pure $ BL.toStrict (Data.ByteString.Builder.toLazyByteString (Data.ByteString.Builder.word64Hex bs))
 
 application :: Env -> Application
-application env = gzip defaultGzipSettings (requestIdMiddleware (serve idcApi (idcServer env)))
+application env = gzip defaultGzipSettings (securityHeadersMiddleware (corsMiddleware ["*"] (requestIdMiddleware (serve idcApi (idcServer env)))))
 
 main :: IO ()
 main = do
