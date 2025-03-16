@@ -33,6 +33,7 @@ library
     Idc.Cache
     Idc.Config
     Idc.Import
+    Idc.Log
     Idc.Migrate
     Idc.Problem
     Idc.Models
@@ -66,7 +67,10 @@ executable idc-catalog
   main-is:          Main.hs
   build-depends:
     , base
+    , bytestring
+    , http-types
     , idc-catalog
+    , random
     , servant-server
     , text
     , wai
