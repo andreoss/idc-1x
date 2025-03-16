@@ -36,6 +36,7 @@ library
     Idc.Migrate
     Idc.Problem
     Idc.Models
+    Idc.RateLimit
     Idc.Search
   build-depends:
     , aeson
