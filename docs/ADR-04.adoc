@@ -1,0 +1,23 @@
+= ADR-04: Seed Data Externalization
+
+== Status
+
+Accepted
+
+== Context
+
+Seed CSV files (`seed/idc10.csv`, `seed/idc11.csv`, `seed/crosswalk.csv`) are committed in the repo but originate from public WHO/ICD releases. Keeping them in-tree inflates history and complicates updates.
+
+== Decision
+
+* Move seed files to an orphan branch `seed-data` in the same repository.
+* Provide a `scripts/fetch-seed.sh` that downloads from public WHO ICD API endpoints (or mirrors) and places them in `seed/`.
+* CI runs `fetch-seed.sh` on every build; local dev uses `make seed` or the script.
+* The main branch no longer tracks `seed/*.csv` (added to `.gitignore`).
+
+== Consequences
+
+* Repository size shrinks; history is cleaner.
+* Seed updates are a single script run, not a commit.
+* Build requires network access (or cached artifacts) to fetch seed data.
+* Public WHO endpoints: https://icd.who.int/icdapi (requires token) or static dumps from https://github.com/WHO/ICD-11.
