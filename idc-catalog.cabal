@@ -35,6 +35,7 @@ library
     Idc.Cors
     Idc.Import
     Idc.Log
+    Idc.Metrics
     Idc.Migrate
     Idc.Problem
     Idc.Models

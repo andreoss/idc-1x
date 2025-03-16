@@ -8,6 +8,7 @@ import Idc.App (Env(..), mkEnv, envPool)
 import Idc.Api (idcApi, idcServer)
 import Idc.Config (cfgPort, loadConfig, validateConfig)
 import Idc.Cors (corsMiddleware)
+import Idc.Metrics (Metrics, mkMetrics, metricsMiddleware)
 import Idc.Migrate (ensureSeeded, runSchemaMigrations)
 import Idc.Security (securityHeadersMiddleware)
 import Network.Wai (Application, Middleware, requestHeaders)
@@ -27,8 +28,8 @@ generateRequestId = do
   bs <- randomIO :: IO Word64
   pure $ BL.toStrict (Data.ByteString.Builder.toLazyByteString (Data.ByteString.Builder.word64Hex bs))
 
-application :: Env -> Application
-application env = gzip defaultGzipSettings (securityHeadersMiddleware (corsMiddleware ["*"] (requestIdMiddleware (serve idcApi (idcServer env)))))
+application :: Env -> Metrics -> Application
+application env metrics = gzip defaultGzipSettings (securityHeadersMiddleware (corsMiddleware ["*"] (requestIdMiddleware (metricsMiddleware metrics (serve idcApi (idcServer env))))))
 
 main :: IO ()
 main = do
@@ -37,6 +38,7 @@ main = do
     Left err -> fail err
     Right () -> pure ()
   env <- mkEnv cfg
+  metrics <- mkMetrics
   runSchemaMigrations (envPool env)
   ensureSeeded cfg (envPool env)
-  run (cfgPort cfg) (application env)
+  run (cfgPort cfg) (application env metrics)
