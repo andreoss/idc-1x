@@ -22,12 +22,6 @@ data FeatureFlags = FeatureFlags
   , flagEnableMetrics :: Bool
   } deriving (Show)
 
-defaultFlags :: FeatureFlags
-defaultFlags = FeatureFlags
-  { flagEnableCache   = True
-  , flagEnableMetrics = False
-  }
-
 loadConfig :: IO Config
 loadConfig =
   Config
@@ -35,7 +29,7 @@ loadConfig =
     <*> (maybe 8080 read <$> lookupEnv "PORT")
     <*> (maybe "seed" id <$> lookupEnv "SEED_DIR")
     <*> (maybe 10 read <$> lookupEnv "POOL_SIZE")
-    <*> (maybe "info" id <$> lookupEnv "LOG_LEVEL")
+    <*> (T.pack <$> maybe "info" id <$> lookupEnv "LOG_LEVEL")
     <*> (featureFlagsFromEnv <$> lookupEnv "ENABLE_CACHE" <*> lookupEnv "ENABLE_METRICS")
 
 featureFlagsFromEnv :: Maybe String -> Maybe String -> FeatureFlags
@@ -61,4 +55,5 @@ validateConfig :: Config -> Either String ()
 validateConfig cfg
   | T.null (cfgPgConn cfg) = Left "PG_CONN must not be empty"
   | cfgPort cfg < 1 || cfgPort cfg > 65535 = Left "PORT must be between 1 and 65535"
+  | cfgPoolSize cfg < 1 || cfgPoolSize cfg > 100 = Left "POOL_SIZE must be between 1 and 100"
   | otherwise = Right ()
