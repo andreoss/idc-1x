@@ -7,17 +7,20 @@ import Control.Monad (unless)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Database.Persist.Sql
+import Database.Persist.Postgresql ()
 import Idc.Config (Config(..))
 import Idc.Import
 import Idc.Models
 import System.FilePath ((</>))
 
 runSchemaMigrations :: ConnectionPool -> IO ()
-runSchemaMigrations pool =
+runSchemaMigrations pool = do
+  runSqlPool (rawExecute "SET statement_timeout = 5000" []) pool
   runSqlPool (runMigration migrateAll) pool
 
 ensureSeeded :: Config -> ConnectionPool -> IO ()
 ensureSeeded cfg pool = do
+  runSqlPool (rawExecute "SET statement_timeout = 5000" []) pool
   n <- runSqlPool (count ([] :: [Filter CatalogItem])) pool
   unless (n > 0) $ seedAll (cfgSeedDir cfg) pool
 

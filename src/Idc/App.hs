@@ -9,14 +9,17 @@ import Database.Persist.Postgresql (createPostgresqlPool)
 import Database.Persist.Sql (ConnectionPool)
 import Idc.Cache (Cache, mkCache)
 import Idc.Config (Config(..))
+import Idc.Metrics (Metrics)
 
 data Env = Env
-  { envCfg   :: Config
-  , envPool  :: ConnectionPool
-  , envCache :: Cache
+  { envCfg    :: Config
+  , envPool   :: ConnectionPool
+  , envCache  :: Cache
+  , envMetrics :: Metrics
   }
 
-mkEnv :: Config -> IO Env
-mkEnv cfg = do
+mkEnv :: Config -> Metrics -> IO Env
+mkEnv cfg metrics = do
   pool <- runStdoutLoggingT $ createPostgresqlPool (encodeUtf8 (cfgPgConn cfg)) (cfgPoolSize cfg)
-  Env cfg pool <$> mkCache
+  cache <- mkCache
+  pure Env { envCfg = cfg, envPool = pool, envCache = cache, envMetrics = metrics }

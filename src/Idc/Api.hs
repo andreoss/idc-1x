@@ -100,6 +100,7 @@ instance Aeson.FromJSON ImportRequest where
 type IdcApi =
        "healthz" :> Get '[JSON] Value
   :<|> "readyz" :> Get '[JSON] Value
+  :<|> "metrics" :> Get '[JSON] Value
   :<|> "swagger.json" :> Get '[JSON] Swagger
   :<|> "admin" :> "import" :> ReqBody '[JSON] ImportRequest
          :> Post '[JSON] Value
@@ -286,10 +287,14 @@ swaggerDoc = mempty
       ]
   }
 
+metricsH :: Env -> Handler Value
+metricsH env = pure (Aeson.toJSON (envMetrics env))
+
 idcServer :: Env -> Server IdcApi
 idcServer env =
        healthH env
   :<|> readyzH env
+  :<|> metricsH env
   :<|> pure swaggerDoc
   :<|> importH
   :<|> flushCacheH env

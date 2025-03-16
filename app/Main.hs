@@ -37,8 +37,8 @@ main = do
   case validateConfig cfg of
     Left err -> fail err
     Right () -> pure ()
-  env <- mkEnv cfg
   metrics <- mkMetrics
+  env <- mkEnv cfg metrics
   runSchemaMigrations (envPool env)
   ensureSeeded cfg (envPool env)
   run (cfgPort cfg) (application env metrics)
