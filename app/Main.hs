@@ -6,10 +6,11 @@ import Idc.Config (cfgPort, loadConfig, validateConfig)
 import Idc.Migrate (ensureSeeded, runSchemaMigrations)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
+import Network.Wai.Middleware.Gzip (gzip, defaultGzipSettings)
 import Servant (serve)
 
 application :: Env -> Application
-application env = serve idcApi (idcServer env)
+application env = gzip defaultGzipSettings (serve idcApi (idcServer env))
 
 main :: IO ()
 main = do

@@ -80,16 +80,22 @@ instance Aeson.FromJSON PagedResponse where
     <*> o Aeson..:  "last"
     <*> o Aeson..:  "items"
 
-newtype ImportRequest = ImportRequest
+data ImportRequest = ImportRequest
   { seedDir :: FilePath
+  , dryRun  :: Bool
   } deriving (Eq, Show)
 
 instance Aeson.ToJSON ImportRequest where
-  toJSON (ImportRequest d) = Aeson.object ["seedDir" Aeson..= d]
+  toJSON (ImportRequest d dr) = Aeson.object
+    [ "seedDir" Aeson..= d
+    , "dryRun"  Aeson..= dr
+    ]
 
 instance Aeson.FromJSON ImportRequest where
   parseJSON = Aeson.withObject "ImportRequest" $ \o ->
-    ImportRequest <$> o Aeson..: "seedDir"
+    ImportRequest
+      <$> o Aeson..: "seedDir"
+      <*> o Aeson..:? "dryRun" Aeson..!= False
 
 type IdcApi =
        "healthz" :> Get '[JSON] Value
@@ -97,6 +103,7 @@ type IdcApi =
   :<|> "swagger.json" :> Get '[JSON] Swagger
   :<|> "admin" :> "import" :> ReqBody '[JSON] ImportRequest
          :> Post '[JSON] Value
+  :<|> "admin" :> "flush-cache" :> Post '[JSON] Value
   :<|> "api" :> "v1" :> CatalogApi
 
 type CatalogApi =
@@ -250,6 +257,8 @@ swaggerDoc = mempty
           { _pathItemGet = Just (mkOp "Swagger specification" [] Nothing) })
       , ("/admin/import", mempty
           { _pathItemPost = Just (mkOp "Import CSV catalog files" [] Nothing) })
+      , ("/admin/flush-cache", mempty
+          { _pathItemPost = Just (mkOp "Flush in-memory cache" [] Nothing) })
       , ("/api/v1/{catalog}/items", mempty
           { _pathItemGet = Just (mkOp "List catalog items"
               [ mkPathParam "catalog" "Catalog id"
@@ -283,6 +292,7 @@ idcServer env =
   :<|> readyzH env
   :<|> pure swaggerDoc
   :<|> importH
+  :<|> flushCacheH env
   :<|> catalogH env
 
 healthH :: Env -> Handler Value
@@ -307,6 +317,11 @@ readyzH env = do
     then pure (object ["status" .= ("ok" :: Text)])
     else throwError err503 { errBody = Aeson.encode (object ["status" .= ("not ready" :: Text)]), errHeaders = [("Content-Type", "application/json")] }
 
+flushCacheH :: Env -> Handler Value
+flushCacheH env = do
+  liftIO $ cPurge (envCache env)
+  pure (object ["status" .= ("ok" :: Text), "message" .= ("cache flushed" :: Text)])
+
 catalogH :: Env -> Server CatalogApi
 catalogH env =
        listItems env
@@ -321,17 +336,27 @@ resolveCatalog tag =
 importH :: ImportRequest -> Handler Value
 importH req = do
   let dir = seedDir req
+      isDryRun = dryRun req
   c10 <- liftIO $ parseCatalogCsv <$> TIO.readFile (dir </> "idc10.csv")
   c11 <- liftIO $ parseCatalogCsv <$> TIO.readFile (dir </> "idc11.csv")
   xw  <- liftIO $ parseCrosswalkCsv <$> TIO.readFile (dir </> "crosswalk.csv")
   let allErrs = irErrors c10 ++ irErrors c11
       totalRows = length (irRows c10) + length (irRows c11) + length xw
-  pure $ object
-    [ "errors" .= allErrs
-    , "catalogItems" .= (length (irRows c10) + length (irRows c11))
-    , "crosswalkRows" .= length xw
-    , "totalParsed" .= totalRows
-    ]
+  if isDryRun
+    then pure $ object
+      [ "errors" .= allErrs
+      , "catalogItems" .= (0 :: Int)
+      , "crosswalkRows" .= (0 :: Int)
+      , "totalParsed" .= totalRows
+      , "dryRun" .= True
+      ]
+    else pure $ object
+      [ "errors" .= allErrs
+      , "catalogItems" .= (length (irRows c10) + length (irRows c11))
+      , "crosswalkRows" .= length xw
+      , "totalParsed" .= totalRows
+      , "dryRun" .= False
+      ]
 
 db :: Env -> SqlPersistM a -> IO a
 db env act = runSqlPool (mapReaderT (runResourceT . runNoLoggingT) act) (envPool env)

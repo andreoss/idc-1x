@@ -39,12 +39,35 @@ spec = do
       validIdc11Code "5A" `shouldBe` False
       validIdc11Code "5A111.22" `shouldBe` False
 
-  describe "csv roundtrip" $
+  describe "csv roundtrip" $ do
     it "renderRow after parseLine is identity for safe rows" $
       property $ \(SafeText c) (SafeText t) n ->
         let row = Row c (if n then Just "P1" else Nothing) t ""
             txt = renderRow row
         in parseLine txt == Just row
+
+    it "roundtrip preserves code field exactly" $
+      property $ \(SafeText c) (SafeText t) ->
+        let row = Row c Nothing t ""
+            txt = renderRow row
+        in case parseLine txt of
+             Just r  -> rowCode r == c
+             Nothing -> False
+
+    it "renderRow output has correct comma count" $
+      property $ \(SafeText c) (SafeText t) ->
+        let row = Row c Nothing t ""
+            txt = renderRow row
+            commas = length (filter (== ',') (T.unpack txt))
+        in commas == 3
+
+    it "roundtrip through parseCatalogCsv preserves valid rows" $
+      property $ \(SafeText c) (SafeText t) ->
+        let header = "code,parent,title"
+            row = Row c Nothing t ""
+            csv = header <> "\n" <> renderRow row <> "\n"
+            result = parseCatalogCsv csv
+        in length (irRows result) == 1 && null (irErrors result)
 
   describe "parseCatalogCsv" $ do
     it "skips header and malformed lines" $

@@ -69,6 +69,7 @@ executable idc-catalog
     , servant-server
     , text
     , wai
+    , wai-extra
     , warp
 
 test-suite idc-catalog-test
