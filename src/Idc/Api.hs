@@ -30,30 +30,32 @@ import Idc.Models
 import Idc.Search
 
 data PagedResponse = PagedResponse
-  { prCatalog :: Text
-  , prPage    :: Int
-  , prPerPage :: Int
-  , prTotal   :: Int
-  , prParent  :: Maybe Text
-  , prNext    :: Maybe Int
-  , prPrev    :: Maybe Int
-  , prFirst   :: Int
-  , prLast    :: Int
-  , prItems   :: [Value]
+  { prCatalog  :: Text
+  , prPage     :: Int
+  , prPerPage  :: Int
+  , prTotal    :: Int
+  , prParent   :: Maybe Text
+  , prChapter  :: Maybe Text
+  , prNext     :: Maybe Int
+  , prPrev     :: Maybe Int
+  , prFirst    :: Int
+  , prLast     :: Int
+  , prItems    :: [Value]
   } deriving (Show)
 
 instance ToJSON PagedResponse where
   toJSON p = object
-    [ "catalog" .= prCatalog p
-    , "page"    .= prPage p
-    , "perPage" .= prPerPage p
-    , "total"   .= prTotal p
-    , "parent"  .= prParent p
-    , "next"    .= prNext p
-    , "prev"    .= prPrev p
-    , "first"   .= prFirst p
-    , "last"    .= prLast p
-    , "items"   .= prItems p
+    [ "catalog"  .= prCatalog p
+    , "page"     .= prPage p
+    , "perPage"  .= prPerPage p
+    , "total"    .= prTotal p
+    , "parent"   .= prParent p
+    , "chapter"  .= prChapter p
+    , "next"     .= prNext p
+    , "prev"     .= prPrev p
+    , "first"    .= prFirst p
+    , "last"     .= prLast p
+    , "items"    .= prItems p
     ]
 
 instance FromJSON PagedResponse where
@@ -63,6 +65,7 @@ instance FromJSON PagedResponse where
     <*> o .:  "perPage"
     <*> o .:  "total"
     <*> o .:? "parent"
+    <*> o .:? "chapter"
     <*> o .:? "next"
     <*> o .:? "prev"
     <*> o .:  "first"
@@ -92,6 +95,7 @@ type CatalogApi =
          :> QueryParam "page" Int
          :> QueryParam "perPage" Int
          :> QueryParam "parent" Text
+         :> QueryParam "chapter" Text
          :> Get '[JSON] Value
   :<|> Capture "catalog" Text :> "items" :> Capture "code" Text
          :> Get '[JSON] Value
@@ -152,8 +156,8 @@ importH req = do
 db :: Env -> SqlPersistM a -> IO a
 db env act = runSqlPool (mapReaderT (runResourceT . runNoLoggingT) act) (envPool env)
 
-listItems :: Env -> Text -> Maybe Int -> Maybe Int -> Maybe Text -> Handler Value
-listItems env tag mpage mperPage mparent = do
+listItems :: Env -> Text -> Maybe Int -> Maybe Int -> Maybe Text -> Maybe Text -> Handler Value
+listItems env tag mpage mperPage mparent mchapter = do
   cat <- resolveCatalog tag
   let page    = max 1 (fromMaybe 1 mpage)
       perPage = clampP (fromMaybe 25 mperPage)
@@ -162,6 +166,9 @@ listItems env tag mpage mperPage mparent = do
         where_ (i ^. CatalogItemCatalog ==. val (catalogTag cat))
         case mparent of
           Just p  -> where_ (i ^. CatalogItemParent ==. just (val p))
+          Nothing -> pure ()
+        case mchapter of
+          Just ch -> where_ (i ^. CatalogItemChapter ==. just (val ch))
           Nothing -> pure ()
   total <- liftIO $ db env $ do
     cnt <- select $ from $ \i -> itemFilter i >> pure countRows
@@ -177,16 +184,17 @@ listItems env tag mpage mperPage mparent = do
       nxt = if page < totalPages then Just (page + 1) else Nothing
       prv = if page > 1 then Just (page - 1) else Nothing
       resp = PagedResponse
-        { prCatalog = catalogTag cat
-        , prPage    = page
-        , prPerPage = perPage
-        , prTotal   = total
-        , prParent  = mparent
-        , prNext    = nxt
-        , prPrev    = prv
-        , prFirst   = 1
-        , prLast    = totalPages
-        , prItems   = map itemJson rows
+        { prCatalog  = catalogTag cat
+        , prPage     = page
+        , prPerPage  = perPage
+        , prTotal    = total
+        , prParent   = mparent
+        , prChapter  = mchapter
+        , prNext     = nxt
+        , prPrev     = prv
+        , prFirst    = 1
+        , prLast     = totalPages
+        , prItems    = map itemJson rows
         }
   pure (toJSON resp)
 
