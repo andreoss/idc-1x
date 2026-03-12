@@ -1,5 +1,7 @@
 module Idc.Import
   ( Row(..)
+  , ImportError(..)
+  , ImportResult(..)
   , parseCatalogCsv
   , parseLine
   , parseCrosswalkCsv
@@ -8,8 +10,9 @@ module Idc.Import
   , validIdc11Code
   ) where
 
+import Data.Aeson (FromJSON, ToJSON)
+import qualified Data.Aeson as Aeson
 import Data.Char (isDigit, isUpper)
-import Data.Maybe (mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 
@@ -20,9 +23,55 @@ data Row = Row
   , rowExtra  :: Text
   } deriving (Eq, Show)
 
-parseCatalogCsv :: Text -> [Row]
-parseCatalogCsv =
-  mapMaybe parseLine . drop 1 . T.lines
+instance ToJSON Row where
+  toJSON (Row c p t e) =
+    Aeson.object ["code" Aeson..= c, "parent" Aeson..= p, "title" Aeson..= t, "extra" Aeson..= e]
+
+instance FromJSON Row where
+  parseJSON = Aeson.withObject "Row" $ \o ->
+    Row <$> o Aeson..: "code" <*> o Aeson..: "parent" <*> o Aeson..: "title" <*> o Aeson..: "extra"
+
+data ImportError = ImportError
+  { ieLine :: Int
+  , ieRaw  :: Text
+  , ieReason :: Text
+  } deriving (Eq, Show)
+
+instance ToJSON ImportError where
+  toJSON (ImportError ln raw reason) =
+    Aeson.object ["line" Aeson..= ln, "raw" Aeson..= raw, "reason" Aeson..= reason]
+
+instance FromJSON ImportError where
+  parseJSON = Aeson.withObject "ImportError" $ \o ->
+    ImportError <$> o Aeson..: "line" <*> o Aeson..: "raw" <*> o Aeson..: "reason"
+
+data ImportResult = ImportResult
+  { irErrors :: [ImportError]
+  , irRows   :: [Row]
+  } deriving (Eq, Show)
+
+instance ToJSON ImportResult where
+  toJSON (ImportResult es rs) =
+    Aeson.object ["errors" Aeson..= es, "rows" Aeson..= rs]
+
+instance FromJSON ImportResult where
+  parseJSON = Aeson.withObject "ImportResult" $ \o ->
+    ImportResult <$> o Aeson..: "errors" <*> o Aeson..: "rows"
+
+parseCatalogCsv :: Text -> ImportResult
+parseCatalogCsv txt =
+  let ls = drop 1 (T.lines txt)
+      numbered = zip [2 :: Int ..] ls
+      results = map (uncurry parseCatalogLine) numbered
+      errs = [e | Left e <- results]
+      rows = [r | Right r <- results]
+  in ImportResult errs rows
+
+parseCatalogLine :: Int -> Text -> Either ImportError Row
+parseCatalogLine ln raw =
+  case parseLine raw of
+    Just r  -> Right r
+    Nothing -> Left (ImportError ln raw "malformed CSV row")
 
 parseLine :: Text -> Maybe Row
 parseLine l =
@@ -45,6 +94,12 @@ parseCrosswalkCsv =
     toTriple l = case T.splitOn "," (T.strip l) of
       [a, b, k] -> Just (a, b, k)
       _         -> Nothing
+
+mapMaybe :: (a -> Maybe b) -> [a] -> [b]
+mapMaybe _ []     = []
+mapMaybe f (x:xs) = case f x of
+  Just y  -> y : mapMaybe f xs
+  Nothing -> mapMaybe f xs
 
 validChapterRoman :: Text -> Bool
 validChapterRoman t =

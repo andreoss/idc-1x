@@ -26,8 +26,14 @@ seedAll dir pool = do
   c10 <- parseCatalogCsv <$> TIO.readFile (dir </> "idc10.csv")
   c11 <- parseCatalogCsv <$> TIO.readFile (dir </> "idc11.csv")
   xw  <- parseCrosswalkCsv <$> TIO.readFile (dir </> "crosswalk.csv")
-  runSqlPool (insertMany_ (toItems Idc10 c10 ++ toItems Idc11 c11)) pool
-  runSqlPool (insertMany_ (toXw xw)) pool
+  let items10 = toItems Idc10 (irRows c10)
+      items11 = toItems Idc11 (irRows c11)
+  unless (null items10) $
+    runSqlPool (insertMany_ items10) pool
+  unless (null items11) $
+    runSqlPool (insertMany_ items11) pool
+  unless (null xw) $
+    runSqlPool (insertMany_ (toXw xw)) pool
 
 toItems :: Catalog -> [Row] -> [CatalogItem]
 toItems cat = map toItem

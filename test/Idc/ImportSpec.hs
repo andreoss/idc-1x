@@ -46,8 +46,34 @@ spec = do
             txt = renderRow row
         in parseLine txt == Just row
 
-  describe "parseCatalogCsv" $
+  describe "parseCatalogCsv" $ do
     it "skips header and malformed lines" $
       parseCatalogCsv "code,parent,title\nA00,,Cholera,junk extra\nBAD\n"
-        `shouldMatchList`
-          [Row "A00" Nothing "Cholera" "junk extra"]
+        `shouldBe`
+          ImportResult
+            { irErrors = [ImportError 3 "BAD" "malformed CSV row"]
+            , irRows   = [Row "A00" Nothing "Cholera" "junk extra"]
+            }
+
+    it "accumulates multiple errors with correct line numbers" $ do
+      let csv = "code,parent,title\nA00,,Cholera\nX\nY\nB01,,Measles\n"
+          result = parseCatalogCsv csv
+      length (irRows result) `shouldBe` 2
+      length (irErrors result) `shouldBe` 2
+      ieLine (head (irErrors result)) `shouldBe` 3
+      ieLine (irErrors result !! 1) `shouldBe` 4
+
+    it "produces no errors for valid CSV" $ do
+      let csv = "code,parent,title\nA00,,Cholera\nB01,,Measles\n"
+          result = parseCatalogCsv csv
+      irErrors result `shouldBe` []
+      length (irRows result) `shouldBe` 2
+
+    it "error contains raw text and reason" $ do
+      let csv = "code,parent,title\nnot,valid,here,too,many\n"
+          result = parseCatalogCsv csv
+      length (irErrors result) `shouldBe` 1
+      let err = head (irErrors result)
+      ieRaw err `shouldBe` "not,valid,here,too,many"
+      ieReason err `shouldBe` "malformed CSV row"
+      ieLine err `shouldBe` 2
