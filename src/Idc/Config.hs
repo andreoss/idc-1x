@@ -1,6 +1,7 @@
 module Idc.Config
   ( Config(..)
   , loadConfig
+  , validateConfig
   ) where
 
 import Data.Text (Text)
@@ -26,3 +27,9 @@ reqText k = do
   case v of
     Nothing -> fail ("missing env " ++ k)
     Just s  -> pure (T.pack s)
+
+validateConfig :: Config -> Either String ()
+validateConfig cfg
+  | T.null (cfgPgConn cfg) = Left "PG_CONN must not be empty"
+  | cfgPort cfg < 1 || cfgPort cfg > 65535 = Left "PORT must be between 1 and 65535"
+  | otherwise = Right ()
