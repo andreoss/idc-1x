@@ -77,8 +77,10 @@ test-suite idc-catalog-test
   main-is:          Spec.hs
   other-modules:
     Idc.ImportSpec
+    Idc.ProblemSpec
     Idc.SearchSpec
   build-depends:
+    , aeson
     , base
     , containers
     , hspec
