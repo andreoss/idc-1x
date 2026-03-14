@@ -33,6 +33,7 @@ library
     Idc.Config
     Idc.Import
     Idc.Migrate
+    Idc.Problem
     Idc.Models
     Idc.Search
   build-depends:
