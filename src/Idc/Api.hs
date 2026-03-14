@@ -86,6 +86,7 @@ instance Aeson.FromJSON ImportRequest where
 
 type IdcApi =
        "healthz" :> Get '[JSON] Value
+  :<|> "readyz" :> Get '[JSON] Value
   :<|> "swagger.json" :> Get '[JSON] Swagger
   :<|> "admin" :> "import" :> ReqBody '[JSON] ImportRequest
          :> Post '[JSON] Value
@@ -118,6 +119,7 @@ swaggerDoc = mempty
 idcServer :: Env -> Server IdcApi
 idcServer env =
        healthH env
+  :<|> readyzH env
   :<|> pure swaggerDoc
   :<|> importH
   :<|> catalogH env
@@ -132,6 +134,17 @@ healthH env = do
   let status = if dbOk then ("ok" :: Text) else ("degraded" :: Text)
       dbStat = if dbOk then ("ok" :: Text) else ("error" :: Text)
   pure (object ["status" .= status, "db" .= dbStat])
+
+readyzH :: Env -> Handler Value
+readyzH env = do
+  dbOk <- liftIO $ do
+    result <- try (db env $ rawExecute "SELECT 1" [])
+    pure $ case result of
+      Left (_ :: SomeException) -> False
+      Right _                   -> True
+  if dbOk
+    then pure (object ["status" .= ("ok" :: Text)])
+    else throwError err503 { errBody = Aeson.encode (object ["status" .= ("not ready" :: Text)]), errHeaders = [("Content-Type", "application/json")] }
 
 catalogH :: Env -> Server CatalogApi
 catalogH env =
