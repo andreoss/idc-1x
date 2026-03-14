@@ -16,6 +16,7 @@ common shared
     MultiParamTypeClasses
     OverloadedStrings
     QuasiQuotes
+    ScopedTypeVariables
     StandaloneDeriving
     TemplateHaskell
     TypeFamilies

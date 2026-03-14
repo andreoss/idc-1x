@@ -6,6 +6,7 @@ module Idc.Api
   , PagedResponse(..)
   ) where
 
+import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Trans.Resource (runResourceT)
@@ -116,13 +117,21 @@ swaggerDoc = mempty
 
 idcServer :: Env -> Server IdcApi
 idcServer env =
-       healthH
+       healthH env
   :<|> pure swaggerDoc
   :<|> importH
   :<|> catalogH env
 
-healthH :: Handler Value
-healthH = pure (object ["status" .= ("ok" :: Text)])
+healthH :: Env -> Handler Value
+healthH env = do
+  dbOk <- liftIO $ do
+    result <- try (db env $ rawExecute "SELECT 1" [])
+    pure $ case result of
+      Left (_ :: SomeException) -> False
+      Right _                   -> True
+  let status = if dbOk then ("ok" :: Text) else ("degraded" :: Text)
+      dbStat = if dbOk then ("ok" :: Text) else ("error" :: Text)
+  pure (object ["status" .= status, "db" .= dbStat])
 
 catalogH :: Env -> Server CatalogApi
 catalogH env =
