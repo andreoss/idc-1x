@@ -83,8 +83,13 @@ test-suite idc-catalog-test
   build-depends:
     , aeson
     , base
+    , bytestring
     , containers
     , hspec
     , idc-catalog
+    , persistent
     , QuickCheck
+    , servant
+    , servant-server
+    , swagger2
     , text

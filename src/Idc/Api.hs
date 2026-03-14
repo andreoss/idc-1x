@@ -242,13 +242,16 @@ searchItems env tag mq mlimit = do
     Just x       -> pure x
   let lim = max 1 (min 50 (fromMaybe 10 mlimit))
       nq = normalizeText (T.toLower q)
-      pat = T.concat ["%", nq, "%"]
-      qpat = T.concat [nq, "%"]
+      terms = T.words nq
   raw <- liftIO $ db env $ select $
     from $ \i -> do
+      let termMatch t =
+            let pat  = T.concat ["%", t, "%"]
+                qpat = T.concat [t, "%"]
+            in  (lower_ (i ^. CatalogItemTitle) `like` val pat)
+                ||. (i ^. CatalogItemCode `like` val qpat)
       where_ (i ^. CatalogItemCatalog ==. val (catalogTag cat)
-              &&. ((lower_ (i ^. CatalogItemTitle) `like` val pat)
-                   ||. (i ^. CatalogItemCode `like` val qpat)))
+              &&. foldl1 (&&.) (map termMatch terms))
       limit 500
       pure i
   let hits = rankHits q (map toHit raw)
