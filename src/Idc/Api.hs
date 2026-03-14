@@ -12,13 +12,11 @@ import Control.Monad.Trans.Resource (runResourceT)
 import Control.Monad.Trans.Reader (mapReaderT)
 import Data.Aeson (Value, object, (.=))
 import qualified Data.Aeson as Aeson
-import qualified Data.ByteString.Lazy as BL
 import Data.Maybe (fromMaybe, listToMaybe)
 import Data.Swagger (Swagger)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
-import Data.Text.Encoding (encodeUtf8)
 import Database.Esqueleto.Legacy hiding (Value, runSqlPool, count)
 import Database.Persist.Sql (Filter, count, runSqlPool)
 import Servant
@@ -27,6 +25,7 @@ import System.FilePath ((</>))
 import Idc.App (Env(..))
 import Idc.Import (ImportResult(..), parseCatalogCsv, parseCrosswalkCsv)
 import Idc.Models
+import Idc.Problem (Problem(..), throwProblem)
 import Idc.Search
 
 data PagedResponse = PagedResponse
@@ -134,10 +133,7 @@ catalogH env =
 
 resolveCatalog :: Text -> Handler Catalog
 resolveCatalog tag =
-  maybe (failWith err404 "unknown catalog") pure (catalogFromTag tag)
-
-failWith :: ServerError -> Text -> Handler a
-failWith e t = throwError e { errBody = BL.fromStrict (encodeUtf8 t) }
+  maybe (throwProblem (Problem "about:blank" "Not Found" 404 "unknown catalog" Nothing)) pure (catalogFromTag tag)
 
 importH :: ImportRequest -> Handler Value
 importH req = do
@@ -212,15 +208,15 @@ getItem env tag code = do
       limit 1
       pure i
   case results of
-    []    -> failWith err404 "code not found"
+    []    -> throwProblem (Problem "about:blank" "Not Found" 404 "code not found" Nothing)
     (e:_) -> pure (itemJson e)
 
 searchItems :: Env -> Text -> Maybe Text -> Maybe Int -> Handler Value
 searchItems env tag mq mlimit = do
   cat <- resolveCatalog tag
   q <- case fmap T.strip mq of
-    Nothing      -> failWith err400 "missing q"
-    Just ""      -> failWith err400 "empty q"
+    Nothing      -> throwProblem (Problem "about:blank" "Bad Request" 400 "missing q" Nothing)
+    Just ""      -> throwProblem (Problem "about:blank" "Bad Request" 400 "empty q" Nothing)
     Just x       -> pure x
   let lim = max 1 (min 50 (fromMaybe 10 mlimit))
       pat = T.concat ["%", T.toLower q, "%"]
