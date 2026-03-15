@@ -44,6 +44,7 @@ library
     , containers
     , esqueleto
     , filepath
+    , insert-ordered-containers
     , monad-logger
     , persistent
     , persistent-postgresql

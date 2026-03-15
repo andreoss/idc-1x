@@ -27,7 +27,7 @@ import Idc.App (Env(..))
 import Idc.Import (ImportResult(..), parseCatalogCsv, parseCrosswalkCsv)
 import Idc.Models
 import Idc.Problem (Problem(..), throwProblem)
-import Idc.Search
+import Idc.Search (Hit(..), normalizeText, rankHits)
 
 data PagedResponse = PagedResponse
   { prCatalog  :: Text
@@ -241,8 +241,9 @@ searchItems env tag mq mlimit = do
     Just ""      -> throwProblem (Problem "about:blank" "Bad Request" 400 "empty q" Nothing)
     Just x       -> pure x
   let lim = max 1 (min 50 (fromMaybe 10 mlimit))
-      pat = T.concat ["%", T.toLower q, "%"]
-      qpat = T.concat [T.toLower q, "%"]
+      nq = normalizeText (T.toLower q)
+      pat = T.concat ["%", nq, "%"]
+      qpat = T.concat [nq, "%"]
   raw <- liftIO $ db env $ select $
     from $ \i -> do
       where_ (i ^. CatalogItemCatalog ==. val (catalogTag cat)
