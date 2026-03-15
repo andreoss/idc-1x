@@ -30,6 +30,7 @@ import Servant hiding (Param)
 import System.FilePath ((</>))
 
 import Idc.App (Env(..))
+import Idc.Cache (Cache(..))
 import Idc.Import (ImportResult(..), parseCatalogCsv, parseCrosswalkCsv)
 import Idc.Models
 import Idc.Problem (Problem(..), throwProblem)
@@ -401,7 +402,18 @@ searchItems env tag mq mlimit = do
     Just ""      -> throwProblem (Problem "about:blank" "Bad Request" 400 "empty q" Nothing)
     Just x       -> pure x
   let lim = max 1 (min 50 (fromMaybe 10 mlimit))
-      nq = normalizeText (T.toLower q)
+      cacheKey = T.concat ["search:", catalogTag cat, ":", q]
+  cached <- liftIO $ cGet (envCache env) cacheKey
+  case cached of
+    Just bytes ->
+      case Aeson.decode bytes of
+        Just v  -> pure v
+        Nothing -> searchAndCache env cat q lim cacheKey
+    Nothing -> searchAndCache env cat q lim cacheKey
+
+searchAndCache :: Env -> Catalog -> Text -> Int -> Text -> Handler Value
+searchAndCache env cat q lim cacheKey = do
+  let nq = normalizeText (T.toLower q)
       terms = T.words nq
   raw <- liftIO $ db env $ select $
     from $ \i -> do
@@ -415,11 +427,13 @@ searchItems env tag mq mlimit = do
       limit 500
       pure i
   let hits = rankHits q (map toHit raw)
-  pure $ object
-    [ "catalog" .= catalogTag cat
-    , "q" .= q
-    , "hits" .= take lim (map hitJson hits)
-    ]
+      result = object
+        [ "catalog" .= catalogTag cat
+        , "q" .= q
+        , "hits" .= take lim (map hitJson hits)
+        ]
+  liftIO $ cSet (envCache env) cacheKey (Aeson.encode result)
+  pure result
 
 toHit :: Entity CatalogItem -> Hit
 toHit e = Hit (catalogItemCode v) (catalogItemTitle v)
