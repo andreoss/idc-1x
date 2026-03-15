@@ -35,3 +35,28 @@ spec = do
 
     it "is stable for equal scores" $
       length (rankHits "zzz" [hit "A00" "x", hit "B01" "y"]) `shouldBe` 2
+
+  describe "normalizeText" $ do
+    it "folds German umlauts" $
+      normalizeText "über" `shouldBe` "uber"
+
+    it "folds French accented chars" $
+      normalizeText "café" `shouldBe` "cafe"
+
+    it "folds Spanish n-tilde" $
+      normalizeText "niño" `shouldBe` "nino"
+
+    it "folds uppercase diacritics" $
+      normalizeText "ÉNTRY" `shouldBe` "ENTRY"
+
+    it "preserves plain ASCII" $
+      normalizeText "hello" `shouldBe` "hello"
+
+    it "folds Latin Extended-A block" $
+      normalizeText "čšž" `shouldBe` "csz"
+
+    it "folds ogonek and cedilla" $
+      normalizeText "ąęçş" `shouldBe` "aecs"
+
+    it "folds Polish l-stroke" $
+      normalizeText "łódź" `shouldBe` "lodz"
