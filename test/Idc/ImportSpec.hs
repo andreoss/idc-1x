@@ -77,3 +77,42 @@ spec = do
       ieRaw err `shouldBe` "not,valid,here,too,many"
       ieReason err `shouldBe` "malformed CSV row"
       ieLine err `shouldBe` 2
+
+    it "tracks line numbers across mixed valid and invalid rows" $ do
+      let csv = "code,parent,title\nA00,,Cholera\nBAD1\nB01,,Measles\nBAD2\nC01,,Tetanus\n"
+          result = parseCatalogCsv csv
+      length (irRows result) `shouldBe` 3
+      length (irErrors result) `shouldBe` 2
+      map ieLine (irErrors result) `shouldBe` [3, 5]
+      map ieRaw (irErrors result) `shouldBe` ["BAD1", "BAD2"]
+
+    it "preserves consecutive error line numbers" $ do
+      let csv = "code,parent,title\nX\nY\nZ\n"
+          result = parseCatalogCsv csv
+      irRows result `shouldBe` []
+      length (irErrors result) `shouldBe` 3
+      map ieLine (irErrors result) `shouldBe` [2, 3, 4]
+
+    it "empty CSV produces no rows and no errors" $ do
+      parseCatalogCsv "" `shouldBe` ImportResult [] []
+      parseCatalogCsv "code,parent,title\n" `shouldBe` ImportResult [] []
+
+    it "single valid row parses correctly" $ do
+      let csv = "code,parent,title\nA00,,Cholera\n"
+          result = parseCatalogCsv csv
+      irErrors result `shouldBe` []
+      length (irRows result) `shouldBe` 1
+      rowCode (head (irRows result)) `shouldBe` "A00"
+      rowParent (head (irRows result)) `shouldBe` Nothing
+      rowTitle (head (irRows result)) `shouldBe` "Cholera"
+
+    it "row with parent parses parent field" $ do
+      let csv = "code,parent,title\nA01,A00,Intestinal\n"
+          result = parseCatalogCsv csv
+      irErrors result `shouldBe` []
+      rowParent (head (irRows result)) `shouldBe` Just "A00"
+
+    it "error reason is always malformed CSV row" $ do
+      let csv = "code,parent,title\nNOPE\nALSOBAD\n"
+          result = parseCatalogCsv csv
+      map ieReason (irErrors result) `shouldBe` ["malformed CSV row", "malformed CSV row"]
