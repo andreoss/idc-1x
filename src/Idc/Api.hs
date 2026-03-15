@@ -1,9 +1,12 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Idc.Api
   ( IdcApi
   , idcApi
   , idcServer
   , swaggerDoc
   , PagedResponse(..)
+  , CatalogItem(..)
+  , Crosswalk(..)
   ) where
 
 import Control.Exception (SomeException, try)
@@ -13,14 +16,17 @@ import Control.Monad.Trans.Resource (runResourceT)
 import Control.Monad.Trans.Reader (mapReaderT)
 import Data.Aeson (Value, object, (.=))
 import qualified Data.Aeson as Aeson
+import qualified Data.HashMap.Strict.InsOrd as InsOrd
+import Data.List (sortBy)
 import Data.Maybe (fromMaybe, listToMaybe)
-import Data.Swagger (Swagger)
+import qualified Data.Map.Strict as Map
+import Data.Swagger
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Database.Esqueleto.Legacy hiding (Value, runSqlPool, count)
 import Database.Persist.Sql (Filter, count, runSqlPool)
-import Servant
+import Servant hiding (Param)
 import System.FilePath ((</>))
 
 import Idc.App (Env(..))
@@ -113,8 +119,162 @@ type CatalogApi =
 idcApi :: Proxy IdcApi
 idcApi = Proxy
 
+schemaObj :: [(Text, Referenced Schema)] -> [Text] -> Schema
+schemaObj props reqs = mempty
+  { _schemaParamSchema = mempty { _paramSchemaType = Just SwaggerObject }
+  , _schemaProperties = InsOrd.fromList props
+  , _schemaRequired = reqs
+  }
+
+mkStr :: Text -> Referenced Schema
+mkStr d = Inline mempty
+  { _schemaParamSchema = mempty { _paramSchemaType = Just SwaggerString }
+  , _schemaDescription = Just d
+  }
+
+mkInt :: Text -> Referenced Schema
+mkInt d = Inline mempty
+  { _schemaParamSchema = mempty { _paramSchemaType = Just SwaggerInteger }
+  , _schemaDescription = Just d
+  }
+
+instance ToSchema CatalogItem where
+  declareNamedSchema _ = pure $ NamedSchema (Just "CatalogItem") $ schemaObj
+    [ ("code",     mkStr "Catalog code")
+    , ("parent",   mkStr "Parent code")
+    , ("title",    mkStr "Item title")
+    , ("chapter",  mkStr "Chapter")
+    , ("language", mkStr "Language code")
+    ] ["code", "title", "language"]
+
+instance ToSchema Crosswalk where
+  declareNamedSchema _ = pure $ NamedSchema (Just "Crosswalk") $ schemaObj
+    [ ("icd10", mkStr "ICD-10 code")
+    , ("icd11", mkStr "ICD-11 code")
+    , ("kind",  mkStr "Mapping kind")
+    ] ["icd10", "icd11", "kind"]
+
+instance ToSchema Hit where
+  declareNamedSchema _ = pure $ NamedSchema (Just "Hit") $ schemaObj
+    [ ("code",  mkStr "Code")
+    , ("title", mkStr "Title")
+    ] ["code", "title"]
+
+instance ToSchema PagedResponse where
+  declareNamedSchema _ = pure $ NamedSchema (Just "PagedResponse") $ schemaObj
+    [ ("catalog", mkStr "Catalog name")
+    , ("page",    mkInt "Current page")
+    , ("perPage", mkInt "Items per page")
+    , ("total",   mkInt "Total items")
+    , ("parent",  mkStr "Parent filter")
+    , ("chapter", mkStr "Chapter filter")
+    , ("next",    mkInt "Next page")
+    , ("prev",    mkInt "Previous page")
+    , ("first",   mkInt "First page")
+    , ("last",    mkInt "Last page")
+    , ("items",   Inline mempty
+        { _schemaParamSchema = mempty
+            { _paramSchemaType = Just SwaggerArray
+            , _paramSchemaItems = Just (SwaggerItemsObject (Inline mempty
+                { _schemaParamSchema = mempty { _paramSchemaType = Just SwaggerObject } }))
+            }
+        })
+    ] ["catalog", "page", "perPage", "total", "first", "last", "items"]
+
+instance ToSchema Problem where
+  declareNamedSchema _ = pure $ NamedSchema (Just "Problem") $ schemaObj
+    [ ("type",     mkStr "Problem type URI")
+    , ("title",    mkStr "Short description")
+    , ("status",   mkInt "HTTP status code")
+    , ("detail",   mkStr "Human-readable explanation")
+    , ("instance", mkStr "URI reference")
+    ] ["type", "title", "status", "detail"]
+
+mkStrParam :: Text -> Text -> Bool -> Param
+mkStrParam n d req = mempty
+  { _paramName        = n
+  , _paramDescription = Just d
+  , _paramRequired    = Just req
+  , _paramSchema      = ParamOther mempty
+      { _paramOtherSchemaIn = ParamQuery
+      , _paramOtherSchemaParamSchema = mempty { _paramSchemaType = Just SwaggerString }
+      }
+  }
+
+mkIntParam :: Text -> Text -> Bool -> Param
+mkIntParam n d req = mempty
+  { _paramName        = n
+  , _paramDescription = Just d
+  , _paramRequired    = Just req
+  , _paramSchema      = ParamOther mempty
+      { _paramOtherSchemaIn = ParamQuery
+      , _paramOtherSchemaParamSchema = mempty { _paramSchemaType = Just SwaggerInteger }
+      }
+  }
+
+mkPathParam :: Text -> Text -> Param
+mkPathParam n d = mempty
+  { _paramName        = n
+  , _paramDescription = Just d
+  , _paramRequired    = Just True
+  , _paramSchema      = ParamOther mempty
+      { _paramOtherSchemaIn = ParamPath
+      , _paramOtherSchemaParamSchema = mempty { _paramSchemaType = Just SwaggerString }
+      }
+  }
+
+mkOp :: Text -> [Param] -> Maybe (Referenced Response) -> Operation
+mkOp summaryText params mResp = mempty
+  { _operationSummary     = Just summaryText
+  , _operationParameters = map Inline params
+  , _operationResponses  = mempty
+      { _responsesResponses = InsOrd.fromList
+          [(200 :: HttpStatusCode, r) | r <- maybe [] pure mResp]
+      }
+  }
+
 swaggerDoc :: Swagger
 swaggerDoc = mempty
+  { _swaggerInfo = mempty
+      { _infoTitle       = "IDC Catalog API"
+      , _infoVersion     = "1.0"
+      , _infoDescription = Just "REST API for IDC-10 and IDC-11 code catalogs"
+      }
+  , _swaggerPaths = InsOrd.fromList
+      [ ("/healthz", mempty
+          { _pathItemGet = Just (mkOp "Health check" [] Nothing) })
+      , ("/readyz", mempty
+          { _pathItemGet = Just (mkOp "Readiness check" [] Nothing) })
+      , ("/swagger.json", mempty
+          { _pathItemGet = Just (mkOp "Swagger specification" [] Nothing) })
+      , ("/admin/import", mempty
+          { _pathItemPost = Just (mkOp "Import CSV catalog files" [] Nothing) })
+      , ("/api/v1/{catalog}/items", mempty
+          { _pathItemGet = Just (mkOp "List catalog items"
+              [ mkPathParam "catalog" "Catalog id"
+              , mkIntParam  "page" "Page number" False
+              , mkIntParam  "perPage" "Items per page" False
+              , mkStrParam  "parent" "Filter by parent code" False
+              , mkStrParam  "chapter" "Filter by chapter" False]
+              Nothing) })
+      , ("/api/v1/{catalog}/items/{code}", mempty
+          { _pathItemGet = Just (mkOp "Get single catalog item"
+              [ mkPathParam "catalog" "Catalog id"
+              , mkPathParam "code" "Item code"]
+              Nothing) })
+      , ("/api/v1/{catalog}/search", mempty
+          { _pathItemGet = Just (mkOp "Search catalog"
+              [ mkPathParam "catalog" "Catalog id"
+              , mkStrParam  "q" "Search query" True
+              , mkIntParam  "limit" "Max results" False]
+              Nothing) })
+      , ("/api/v1/crosswalk", mempty
+          { _pathItemGet = Just (mkOp "Look up crosswalk mappings"
+              [ mkStrParam "icd10" "ICD-10 code" False
+              , mkStrParam "icd11" "ICD-11 code" False]
+              Nothing) })
+      ]
+  }
 
 idcServer :: Env -> Server IdcApi
 idcServer env =
@@ -294,13 +454,14 @@ crosswalkH env ma mb = do
           pure ()
       limit 1000
       pure x
-  pure $ object ["mappings" .= map xwJson rows]
-
-xwJson :: Entity Crosswalk -> Value
-xwJson e =
-  let v = entityVal e
-  in object
-       [ "icd10" .= crosswalkIcd10 v
-       , "icd11" .= crosswalkIcd11 v
-       , "kind" .= crosswalkKind v
-       ]
+  let deduped = Map.fromList
+        [ ((crosswalkIcd10 v, crosswalkIcd11 v), mapKindFromText (crosswalkKind v))
+        | e <- rows
+        , let v = entityVal e
+        ]
+      sorted = sortBy (\(_, ka) (_, kb) -> compare ka kb) (Map.toAscList deduped)
+  pure $ object ["mappings" .= map (\((a, b), k) ->
+    object [ "icd10" .= a
+           , "icd11" .= b
+           , "kind"  .= mapKindToText k
+           ]) sorted]
