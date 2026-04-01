@@ -2,13 +2,19 @@ module Idc.RateLimit
   ( RateLimiter
   , mkRateLimiter
   , checkRate
+  , rateLimitMiddleware
   ) where
 
+import qualified Data.Aeson as Aeson
 import Data.IORef
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Time.Clock (UTCTime, getCurrentTime, diffUTCTime)
+import Idc.Problem (Problem(..))
+import Network.HTTP.Types (status429)
+import Network.Wai (Middleware, remoteHost, responseLBS)
 
 data RateLimiter = RateLimiter
   { rlRef     :: IORef (Map Text [(UTCTime, Int)])
@@ -43,3 +49,13 @@ checkRate rl key = do
            else let newHits = (now, 1) : valid
                     m' = Map.insert key newHits m
                 in (m', True)
+
+rateLimitMiddleware :: RateLimiter -> Middleware
+rateLimitMiddleware rl app req respond = do
+  let key = T.pack (show (remoteHost req))
+  allowed <- checkRate rl key
+  if allowed
+    then app req respond
+    else respond $ responseLBS status429
+      [("Content-Type", "application/problem+json")]
+      (Aeson.encode (Problem "about:blank" "Too Many Requests" 429 "rate limit exceeded" Nothing))

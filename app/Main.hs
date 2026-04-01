@@ -4,12 +4,14 @@ import Data.ByteString (ByteString)
 import Data.ByteString.Builder (toLazyByteString, word64Hex)
 import qualified Data.ByteString.Lazy as BL
 import Data.Word (Word64)
-import Idc.App (Env(..), mkEnv, envPool)
+import Idc.App (Env(..), mkEnv, envPool, envRateLimiter)
 import Idc.Api (idcApi, idcServer)
 import Idc.Config (cfgPort, loadConfig, validateConfig)
 import Idc.Cors (corsMiddleware)
+import Idc.Log (requestLogMiddleware)
 import Idc.Metrics (Metrics, mkMetrics, metricsMiddleware)
 import Idc.Migrate (ensureSeeded, runSchemaMigrations)
+import Idc.RateLimit (rateLimitMiddleware)
 import Idc.Security (securityHeadersMiddleware)
 import Network.Wai (Application, Middleware, requestHeaders)
 import Network.Wai.Handler.Warp (run)
@@ -29,7 +31,14 @@ generateRequestId = do
   pure $ BL.toStrict (Data.ByteString.Builder.toLazyByteString (Data.ByteString.Builder.word64Hex bs))
 
 application :: Env -> Metrics -> Application
-application env metrics = gzip defaultGzipSettings (securityHeadersMiddleware (corsMiddleware ["*"] (requestIdMiddleware (metricsMiddleware metrics (serve idcApi (idcServer env))))))
+application env metrics =
+  gzip defaultGzipSettings
+    (securityHeadersMiddleware
+      (corsMiddleware ["*"]
+        (requestIdMiddleware
+          (rateLimitMiddleware (envRateLimiter env)
+            (requestLogMiddleware
+              (metricsMiddleware metrics (serve idcApi (idcServer env))))))))
 
 main :: IO ()
 main = do

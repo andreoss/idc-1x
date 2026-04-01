@@ -9,12 +9,14 @@ import qualified Data.Text as T
 import System.Environment (lookupEnv)
 
 data Config = Config
-  { cfgPgConn    :: Text
-  , cfgPort      :: Int
-  , cfgSeedDir   :: FilePath
-  , cfgPoolSize  :: Int
-  , cfgLogLevel  :: Text
-  , cfgFeatures  :: FeatureFlags
+  { cfgPgConn           :: Text
+  , cfgPort             :: Int
+  , cfgSeedDir          :: FilePath
+  , cfgPoolSize         :: Int
+  , cfgLogLevel         :: Text
+  , cfgFeatures         :: FeatureFlags
+  , cfgRateLimitMax     :: Int
+  , cfgRateLimitWindow  :: Int
   } deriving (Show)
 
 data FeatureFlags = FeatureFlags
@@ -31,6 +33,8 @@ loadConfig =
     <*> (maybe 10 read <$> lookupEnv "POOL_SIZE")
     <*> (T.pack . maybe "info" id <$> lookupEnv "LOG_LEVEL")
     <*> (featureFlagsFromEnv <$> lookupEnv "ENABLE_CACHE" <*> lookupEnv "ENABLE_METRICS")
+    <*> (maybe 120 read <$> lookupEnv "RATE_LIMIT_MAX")
+    <*> (maybe 60 read <$> lookupEnv "RATE_LIMIT_WINDOW")
 
 featureFlagsFromEnv :: Maybe String -> Maybe String -> FeatureFlags
 featureFlagsFromEnv mCache mMetrics = FeatureFlags
@@ -56,4 +60,6 @@ validateConfig cfg
   | T.null (cfgPgConn cfg) = Left "PG_CONN must not be empty"
   | cfgPort cfg < 1 || cfgPort cfg > 65535 = Left "PORT must be between 1 and 65535"
   | cfgPoolSize cfg < 1 || cfgPoolSize cfg > 100 = Left "POOL_SIZE must be between 1 and 100"
+  | cfgRateLimitMax cfg < 1 = Left "RATE_LIMIT_MAX must be at least 1"
+  | cfgRateLimitWindow cfg < 1 = Left "RATE_LIMIT_WINDOW must be at least 1"
   | otherwise = Right ()
