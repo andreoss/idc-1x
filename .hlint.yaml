@@ -1,5 +1,20 @@
 - arguments:
     - -XHaskell2010
+    - -XDataKinds
+    - -XDerivingStrategies
+    - -XFlexibleContexts
+    - -XFlexibleInstances
+    - -XGADTs
+    - -XGeneralizedNewtypeDeriving
+    - -XMultiParamTypeClasses
+    - -XOverloadedStrings
+    - -XQuasiQuotes
+    - -XScopedTypeVariables
+    - -XStandaloneDeriving
+    - -XTemplateHaskell
+    - -XTypeFamilies
+    - -XTypeOperators
+    - -XUndecidableInstances
 - ignore: { name: "Avoid lambda" }
 - ignore: { name: "Use infix" }
 - ignore: { name: "Use fmap" }
