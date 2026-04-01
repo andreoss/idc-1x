@@ -1,14 +1,13 @@
 module Idc.Problem
   ( Problem(..)
   , problemHandler
-  , throwProblem
   ) where
 
 import Data.Aeson (FromJSON, ToJSON, (.=), (.:), (.:?))
 import qualified Data.Aeson as Aeson
 import Data.Text (Text)
 import qualified Data.Text as T
-import Servant
+import Servant (ServerError(..))
 
 data Problem = Problem
   { problemType     :: Text
@@ -45,12 +44,6 @@ problemHandler err detail = err
       , problemDetail   = detail
       , problemInstance = Nothing
       })
-  , errHeaders = [("Content-Type", "application/problem+json")]
-  }
-
-throwProblem :: Problem -> Handler a
-throwProblem p = throwError err500
-  { errBody = Aeson.encode p
   , errHeaders = [("Content-Type", "application/problem+json")]
   }
 

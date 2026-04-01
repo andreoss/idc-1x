@@ -33,7 +33,7 @@ import Idc.App (Env(..))
 import Idc.Cache (Cache(..))
 import Idc.Import (ImportResult(..), parseCatalogCsv, parseCrosswalkCsv)
 import Idc.Models
-import Idc.Problem (Problem(..), throwProblem)
+import Idc.Problem (Problem, problemHandler)
 import Idc.Search (Hit(..), normalizeText, rankHits)
 
 data PagedResponse = PagedResponse
@@ -320,7 +320,7 @@ readyzH env = do
       Right _                   -> True
   if dbOk
     then pure (object ["status" .= ("ok" :: Text)])
-    else throwError err503 { errBody = Aeson.encode (object ["status" .= ("not ready" :: Text)]), errHeaders = [("Content-Type", "application/json")] }
+    else throwError (problemHandler err503 "database not ready")
 
 flushCacheH :: Env -> Handler Value
 flushCacheH env = do
@@ -336,7 +336,7 @@ catalogH env =
 
 resolveCatalog :: Text -> Handler Catalog
 resolveCatalog tag =
-  maybe (throwProblem (Problem "about:blank" "Not Found" 404 "unknown catalog" Nothing)) pure (catalogFromTag tag)
+  maybe (throwError (problemHandler err404 "unknown catalog")) pure (catalogFromTag tag)
 
 importH :: ImportRequest -> Handler Value
 importH req = do
@@ -421,15 +421,15 @@ getItem env tag code = do
       limit 1
       pure i
   case results of
-    []    -> throwProblem (Problem "about:blank" "Not Found" 404 "code not found" Nothing)
+    []    -> throwError (problemHandler err404 "code not found")
     (e:_) -> pure (itemJson e)
 
 searchItems :: Env -> Text -> Maybe Text -> Maybe Int -> Handler Value
 searchItems env tag mq mlimit = do
   cat <- resolveCatalog tag
   q <- case fmap T.strip mq of
-    Nothing      -> throwProblem (Problem "about:blank" "Bad Request" 400 "missing q" Nothing)
-    Just ""      -> throwProblem (Problem "about:blank" "Bad Request" 400 "empty q" Nothing)
+    Nothing      -> throwError (problemHandler err400 "missing q")
+    Just ""      -> throwError (problemHandler err400 "empty q")
     Just x       -> pure x
   let lim = max 1 (min 50 (fromMaybe 10 mlimit))
       cacheKey = T.concat ["search:", catalogTag cat, ":", q]
