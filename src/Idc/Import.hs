@@ -3,6 +3,8 @@ module Idc.Import
   , ImportError(..)
   , ImportResult(..)
   , parseCatalogCsv
+  , parseIdc10Csv
+  , parseIdc11Csv
   , parseLine
   , parseCrosswalkCsv
   , renderRow
@@ -59,19 +61,37 @@ instance FromJSON ImportResult where
   parseJSON = Aeson.withObject "ImportResult" $ \o ->
     ImportResult <$> o Aeson..: "errors" <*> o Aeson..: "rows"
 
+-- | Parses CSV rows without validating the code format against any
+-- particular catalog. Used where the caller doesn't know (or care about)
+-- which catalog the rows belong to.
 parseCatalogCsv :: Text -> ImportResult
-parseCatalogCsv txt =
+parseCatalogCsv = parseCatalogCsvWith (const True)
+
+-- | Parses IDC-10 catalog CSV, rejecting rows whose code isn't a valid
+-- IDC-10 code.
+parseIdc10Csv :: Text -> ImportResult
+parseIdc10Csv = parseCatalogCsvWith validIdc10Code
+
+-- | Parses IDC-11 catalog CSV, rejecting rows whose code isn't a valid
+-- IDC-11 code.
+parseIdc11Csv :: Text -> ImportResult
+parseIdc11Csv = parseCatalogCsvWith validIdc11Code
+
+parseCatalogCsvWith :: (Text -> Bool) -> Text -> ImportResult
+parseCatalogCsvWith isValidCode txt =
   let ls = drop 1 (T.lines txt)
       numbered = zip [2 :: Int ..] ls
-      results = map (uncurry parseCatalogLine) numbered
+      results = map (uncurry (parseCatalogLine isValidCode)) numbered
       errs = lefts results
       rows = rights results
   in ImportResult errs rows
 
-parseCatalogLine :: Int -> Text -> Either ImportError Row
-parseCatalogLine ln raw =
+parseCatalogLine :: (Text -> Bool) -> Int -> Text -> Either ImportError Row
+parseCatalogLine isValidCode ln raw =
   case parseLine raw of
-    Just r  -> Right r
+    Just r
+      | isValidCode (rowCode r) -> Right r
+      | otherwise               -> Left (ImportError ln raw "invalid catalog code")
     Nothing -> Left (ImportError ln raw "malformed CSV row")
 
 parseLine :: Text -> Maybe Row

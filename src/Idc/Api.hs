@@ -31,7 +31,7 @@ import System.FilePath ((</>))
 
 import Idc.App (Env(..))
 import Idc.Cache (Cache(..))
-import Idc.Import (ImportResult(..), parseCatalogCsv, parseCrosswalkCsv)
+import Idc.Import (ImportResult(..), parseIdc10Csv, parseIdc11Csv, parseCrosswalkCsv)
 import Idc.Models
 import Idc.Problem (Problem, problemHandler)
 import Idc.Search (Hit(..), normalizeText, rankHits)
@@ -342,8 +342,8 @@ importH :: ImportRequest -> Handler Value
 importH req = do
   let dir = seedDir req
       isDryRun = dryRun req
-  c10 <- liftIO $ parseCatalogCsv <$> TIO.readFile (dir </> "idc10.csv")
-  c11 <- liftIO $ parseCatalogCsv <$> TIO.readFile (dir </> "idc11.csv")
+  c10 <- liftIO $ parseIdc10Csv <$> TIO.readFile (dir </> "idc10.csv")
+  c11 <- liftIO $ parseIdc11Csv <$> TIO.readFile (dir </> "idc11.csv")
   xw  <- liftIO $ parseCrosswalkCsv <$> TIO.readFile (dir </> "crosswalk.csv")
   let allErrs = irErrors c10 ++ irErrors c11
       totalRows = length (irRows c10) + length (irRows c11) + length xw
