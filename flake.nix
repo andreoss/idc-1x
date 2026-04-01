@@ -32,15 +32,15 @@
 
       devShells = forAll (sys:
         let pkgs = nixpkgs.legacyPackages.${sys};
-            hp = hpFor pkgs;
+            hpDev = pkgs.haskell.packages.ghc96;
         in {
           default = pkgs.mkShell {
             buildInputs = [
-              hp.ghc
-              hp.cabal-install
-              hp.hlint
-              hp.weeder
-              (hp.haskell-language-server.override { })
+              hpDev.ghc
+              hpDev.cabal-install
+              hpDev.hlint
+              hpDev.weeder
+              hpDev.haskell-language-server
               pkgs.postgresql_16
               pkgs.redis
               pkgs.curl
