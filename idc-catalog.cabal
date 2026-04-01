@@ -22,7 +22,7 @@ common shared
     TypeFamilies
     TypeOperators
     UndecidableInstances
-  ghc-options:      -Wall -Werror -fwrite-ide-info -hiedir dist-newstyle/hie
+  ghc-options:      -Wall -Werror -fwrite-ide-info
 
 library
   import:           shared
