@@ -20,4 +20,4 @@ jobs:
       - name: Tests
         run: nix develop -c sh -c "cabal update && cabal test all"
       - name: Weeder
-        run: nix develop -c sh -c "cabal build all && weeder --hie-dir dist-newstyle/hie"
+        run: nix develop -c sh -c "cabal build all && weeder --hie-directory dist-newstyle/hie"
